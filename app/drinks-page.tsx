@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { THEME_COOKIE, type ThemeName } from "./theme";
 
-type Drink = {
-  id: string; number: string; name: string; kind: "Tea" | "Coffee"; typeLabel?: string;
-  description: string; image?: string; time: string; yield: string; lastMade?: string;
+type Recipe = {
+  id: string; number: string; name: string; kind: "Tea" | "Coffee" | "Topping"; typeLabel?: string; folder?: string;
+  description: string; image?: string; time: string; yield: string; lastMade?: string; tag?: string;
   ingredients: string[]; ingredientGroups?: { title: string; items: string[] }[];
   method: string[]; note?: string; variations?: string[]; sample?: boolean;
 };
@@ -26,7 +26,7 @@ function saveThemeCookie(choice: ThemeName) {
   document.cookie = `${THEME_COOKIE}=${choice}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
 }
 
-const drinks: Drink[] = [
+const drinks: Recipe[] = [
   {
     id: "strawberry-matcha", number: "01", name: "Strawberry cloud matcha", kind: "Tea",
     description: "Strawberries, jam, matcha, milk.", image: "/strawberry-matcha-latte.png",
@@ -65,14 +65,64 @@ const drinks: Drink[] = [
   },
 ];
 
+const toppings: Recipe[] = [
+  {
+    id: "salted-cheese-foam", number: "01", name: "Salted cheese foam", kind: "Topping", folder: "topping",
+    description: "Cream cheese, whipped cream, a little salt.",
+    time: "15 min", yield: "3 servings", tag: "Quick",
+    ingredientGroups: [
+      { title: "Cream cheese part", items: ["2 oz (4 tbsp) cream cheese, softened", "2 tbsp heavy cream", "1 tbsp sugar"] },
+      { title: "Heavy cream part", items: ["2/3 cup heavy cream", "2 tbsp sugar", "1 tsp sea salt", "1/2 tsp vanilla"] },
+    ],
+    ingredients: ["About 1/4 cup milk (plus 1–2 tbsp as needed)"],
+    method: [
+      "Whisk the softened cream cheese, 2 tbsp heavy cream, and 1 tbsp sugar until very smooth.",
+      "In another bowl, whisk 2/3 cup heavy cream with 2 tbsp sugar, salt, and vanilla until soft and airy (soft peaks).",
+      "Fold the cream cheese mixture into the softly whipped cream.",
+      "Add about 1/4 cup milk, and a little more as needed, until the foam pours off a spoon.",
+    ],
+    variations: [
+      "Add 1 tbsp cream cheese if desired.",
+      "Don't overmix the foam. It should pour off a spoon.",
+    ],
+  },
+];
+
 let visitRequest: Promise<number | null> | null = null;
+
+function RecipeEntry({ recipe, isOpen, onSelect }: { recipe: Recipe; isOpen: boolean; onSelect: (recipe: Recipe | null) => void }) {
+  return <div className="drink-entry">
+    <button id={`drink-${recipe.id}`} type="button" className="drink-row" onClick={() => onSelect(isOpen ? null : recipe)} aria-expanded={isOpen} aria-controls={`recipe-${recipe.id}`} aria-label={`${isOpen ? "Hide" : "Read"} ${recipe.name} recipe`}>
+      <span className="drink-number">{recipe.number} /</span><span className="drink-info"><strong>{recipe.name}</strong><small>{recipe.description}</small></span><span className="drink-kind">{(recipe.typeLabel ?? recipe.kind).toUpperCase()}</span><span className="row-arrow" aria-hidden="true">{isOpen ? "−" : "+"}</span>
+    </button>
+    {isOpen && <article id={`recipe-${recipe.id}`} className="recipe-sheet" role="region" aria-labelledby={`recipe-title-${recipe.id}`}>
+      <div className="recipe-sheet-head"><span className="recipe-overline">~/jelly/{recipe.folder ?? "recipe"}-{recipe.number}.txt <span>·</span> {(recipe.typeLabel ?? recipe.kind).toUpperCase()}</span><button type="button" className="recipe-close" onClick={() => { onSelect(null); document.getElementById(`drink-${recipe.id}`)?.focus(); }}>close ×</button></div>
+      <div className={recipe.image ? "recipe-lead" : "recipe-lead recipe-lead--text"}>{recipe.image && <div className="recipe-image"><Image src={recipe.image} alt={`${recipe.name} in a glass`} width={150} height={160} sizes="(max-width: 520px) 92px, 150px" /></div>}<div className="recipe-lead-copy"><h2 id={`recipe-title-${recipe.id}`} className="recipe-title">{recipe.name}</h2><p className="recipe-intro">{recipe.description}</p><div className="recipe-facts"><span>TIME <strong>{recipe.time}</strong></span><span>MAKES <strong>{recipe.yield}</strong></span>{recipe.lastMade && <span>LAST MADE <strong>{recipe.lastMade}</strong></span>}{recipe.tag && <span>TAG <strong>{recipe.tag}</strong></span>}</div></div></div>
+      <div className="recipe-columns"><section><h3>What you&apos;ll need</h3>{recipe.ingredientGroups?.map((group) => <div className="recipe-ingredient-group" key={group.title}><h4>{group.title}</h4><ul>{group.items.map((item) => <li key={item}>{item}</li>)}</ul></div>)}{recipe.ingredients.length > 0 && <ul className={recipe.ingredientGroups ? "recipe-extra-ingredients" : undefined}>{recipe.ingredients.map((item) => <li key={item}>{item}</li>)}</ul>}</section><section><h3>Make it</h3><ol>{recipe.method.map((step) => <li key={step}>{step}</li>)}</ol></section></div>
+      {recipe.note && <p className="lab-note"><strong>Note:</strong> {recipe.note}</p>}
+      {recipe.variations && <div className="lab-note"><strong>Notes / variations</strong><ul>{recipe.variations.map((item) => <li key={item}>{item}</li>)}</ul></div>}
+      {recipe.sample && <p className="sample-label">[ sample recipe / version 01 ]</p>}
+    </article>}
+  </div>;
+}
 
 export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }) {
   const [theme, setTheme] = useState<ThemeName>(initialTheme);
   const [filter, setFilter] = useState<"All" | "Tea" | "Coffee">("All");
-  const [selected, setSelected] = useState<Drink | null>(null);
+  const [selected, setSelected] = useState<Recipe | null>(null);
   const [visitCount, setVisitCount] = useState<number | null>(null);
+  const [activeSection, setActiveSection] = useState<"about" | "drinks" | "toppings">("about");
   const visibleDrinks = drinks.filter((drink) => filter === "All" || drink.kind === filter);
+
+  useEffect(() => {
+    const updateSection = () => {
+      const hash = window.location.hash;
+      setActiveSection(hash === "#drinks" ? "drinks" : hash === "#toppings" ? "toppings" : "about");
+    };
+    window.addEventListener("hashchange", updateSection);
+    const frame = requestAnimationFrame(updateSection);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("hashchange", updateSection); };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -99,7 +149,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
     <div className="site-shell" id="top">
       <aside className="sidebar">
         <div className="identity"><div className="dog-kaomoji" aria-hidden="true"><span>U・ᴥ・U</span><small>~ woof ~</small></div><a href="#top" className="site-name">jelly coffee lab</a></div>
-        <nav className="sidebar-nav" aria-label="Main navigation"><a href="#drinks" className="current">&gt; drinks</a><a href="#about">about</a></nav>
+        <nav className="sidebar-nav" aria-label="Main navigation"><a href="#about" className={activeSection === "about" ? "current" : undefined} aria-current={activeSection === "about" ? "location" : undefined}>{activeSection === "about" ? "> " : ""}about</a><a href="#drinks" className={activeSection === "drinks" ? "current" : undefined} aria-current={activeSection === "drinks" ? "location" : undefined}>{activeSection === "drinks" ? "> " : ""}drinks</a><a href="#toppings" className={activeSection === "toppings" ? "current" : undefined} aria-current={activeSection === "toppings" ? "location" : undefined}>{activeSection === "toppings" ? "> " : ""}toppings</a></nav>
         <div className="theme-picker" role="group" aria-label="Color theme">
           <div className="sidebar-label">THEME / <span>{themes.find((option) => option.id === theme)?.label}</span></div>
           <div className="theme-options">{themes.map((option) => <button key={option.id} type="button" className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.label} theme`} aria-pressed={theme === option.id} title={option.label}>
@@ -107,36 +157,25 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
           </button>)}</div>
         </div>
         <div className="visit-count" aria-live="polite"><span>VISITS</span><strong>{visitCount === null ? "------" : String(visitCount).padStart(6, "0")}</strong></div>
-        <div className="sidebar-bottom">{drinks.length} recipes here so far<br />last note: keep the ice</div>
+        <div className="sidebar-bottom">{drinks.length} drinks + {toppings.length} topping<br />last note: don&apos;t overmix</div>
       </aside>
 
       <main className="main-content">
-        <div className="path">~/jelly/drinks.txt</div>
-        <h1>little drink log<span className="cursor">_</span></h1>
-        <p className="intro">We keep changing these. Writing down the versions that worked.</p>
+        <div className="path">~/jelly/index.txt</div>
+        <section id="about" className="about about-first" aria-label="About this page"><span className="section-label">ABOUT.TXT</span><h1>little drink log<span className="cursor">_</span></h1><p>We kept forgetting the good ratios. This is our little place to keep them.</p><div className="about-ascii" aria-hidden="true">{`[ coffee ] + [ tea ] = ♡`}</div></section>
 
-        <section id="drinks" className="drink-list" aria-label="Drink recipes">
+        <section id="drinks" className="recipe-section drink-list" aria-labelledby="drinks-title">
+          <div className="section-heading"><span className="section-label">DRINKS.TXT</span><h2 id="drinks-title">drinks</h2><p>We keep changing these. Writing down the versions that worked.</p></div>
           <div className="list-header"><span>FILE NAME</span><div className="filters" role="group" aria-label="Filter drinks">{(["All", "Tea", "Coffee"] as const).map((item) => <button type="button" key={item} onClick={() => { setFilter(item); setSelected(null); }} aria-pressed={filter === item}>{item.toLowerCase()}</button>)}</div></div>
-          {visibleDrinks.map((drink) => {
-            const isOpen = selected?.id === drink.id;
-            return <div className="drink-entry" key={drink.id}>
-              <button id={`drink-${drink.id}`} type="button" className="drink-row" onClick={() => setSelected(isOpen ? null : drink)} aria-expanded={isOpen} aria-controls={`recipe-${drink.id}`} aria-label={`${isOpen ? "Hide" : "Read"} ${drink.name} recipe`}>
-                <span className="drink-number">{drink.number} /</span><span className="drink-info"><strong>{drink.name}</strong><small>{drink.description}</small></span><span className="drink-kind">{(drink.typeLabel ?? drink.kind).toUpperCase()}</span><span className="row-arrow" aria-hidden="true">{isOpen ? "−" : "+"}</span>
-              </button>
-              {isOpen && <article id={`recipe-${drink.id}`} className="recipe-sheet" role="region" aria-labelledby={`recipe-title-${drink.id}`}>
-                <div className="recipe-sheet-head"><span className="recipe-overline">~/jelly/recipe-{drink.number}.txt <span>·</span> {(drink.typeLabel ?? drink.kind).toUpperCase()}</span><button type="button" className="recipe-close" onClick={() => { setSelected(null); document.getElementById(`drink-${drink.id}`)?.focus(); }}>close ×</button></div>
-                <div className={drink.image ? "recipe-lead" : "recipe-lead recipe-lead--text"}>{drink.image && <div className="recipe-image"><Image src={drink.image} alt={`${drink.name} in a glass`} width={150} height={160} sizes="(max-width: 520px) 92px, 150px" /></div>}<div className="recipe-lead-copy"><h2 id={`recipe-title-${drink.id}`} className="recipe-title">{drink.name}</h2><p className="recipe-intro">{drink.description}</p><div className="recipe-facts"><span>TIME <strong>{drink.time}</strong></span><span>MAKES <strong>{drink.yield}</strong></span>{drink.lastMade && <span>LAST MADE <strong>{drink.lastMade}</strong></span>}</div></div></div>
-                <div className="recipe-columns"><section><h3>What you&apos;ll need</h3>{drink.ingredientGroups ? drink.ingredientGroups.map((group) => <div className="recipe-ingredient-group" key={group.title}><h4>{group.title}</h4><ul>{group.items.map((item) => <li key={item}>{item}</li>)}</ul></div>) : <ul>{drink.ingredients.map((item) => <li key={item}>{item}</li>)}</ul>}</section><section><h3>Make it</h3><ol>{drink.method.map((step) => <li key={step}>{step}</li>)}</ol></section></div>
-                {drink.note && <p className="lab-note"><strong>Note:</strong> {drink.note}</p>}
-                {drink.variations && <div className="lab-note"><strong>Notes / variations</strong><ul>{drink.variations.map((item) => <li key={item}>{item}</li>)}</ul></div>}
-                {drink.sample && <p className="sample-label">[ sample recipe / version 01 ]</p>}
-              </article>}
-            </div>;
-          })}
+          {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} />)}
           <p className="list-note">* recipes change when we make something better</p>
         </section>
 
-        <section id="about" className="about"><span className="section-label">ABOUT.TXT</span><h2>why this page exists</h2><p>We kept forgetting the good ratios. This is our little place to keep them.</p><div className="about-ascii" aria-hidden="true">{`[ coffee ] + [ tea ] = ♡`}</div></section>
+        <section id="toppings" className="recipe-section topping-list" aria-labelledby="toppings-title">
+          <div className="section-heading"><span className="section-label">TOPPINGS.TXT</span><h2 id="toppings-title">toppings</h2><p>The bits we put on top.</p></div>
+          <div className="list-header"><span>FILE NAME</span><span>{toppings.length} FILE</span></div>
+          {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} />)}
+        </section>
         <footer><span>© jelly coffee lab</span><a href="#top">back to top ↑</a></footer>
       </main>
     </div>
