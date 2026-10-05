@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { readTheme, THEME_COOKIE } from "./theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,6 +9,8 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: `try { var jellyTheme = localStorage.getItem("jelly-theme"); if (["butter", "blueberry", "cherry", "lilac"].includes(jellyTheme)) document.documentElement.dataset.theme = jellyTheme; } catch {}` }} /></head><body>{children}</body></html>;
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const theme = readTheme(cookieStore.get(THEME_COOKIE)?.value);
+  return <html lang="en" data-theme={theme} suppressHydrationWarning><body>{children}</body></html>;
 }
