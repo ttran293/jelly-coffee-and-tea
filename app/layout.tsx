@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { readTheme, THEME_COOKIE } from "./theme";
 import "./globals.css";
+import "./card/card.css";
 
 export const metadata: Metadata = {
   title: "Jelly Coffee Lab | Open coffee & tea recipes",

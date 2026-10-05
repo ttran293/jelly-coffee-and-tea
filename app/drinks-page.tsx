@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { THEME_COOKIE, type ThemeName } from "./theme";
+import { Card3D } from "./card/studio";
+import { cardDataUrl } from "./card/artwork";
 
 type Recipe = {
   id: string; number: string; name: string; kind: "Tea" | "Coffee" | "Topping"; typeLabel?: string; folder?: string;
@@ -111,13 +113,13 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
   const [filter, setFilter] = useState<"All" | "Tea" | "Coffee">("All");
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [visitCount, setVisitCount] = useState<number | null>(null);
-  const [activeSection, setActiveSection] = useState<"about" | "drinks" | "toppings">("about");
+  const [activeSection, setActiveSection] = useState<"about" | "drinks" | "toppings" | "card">("about");
   const visibleDrinks = drinks.filter((drink) => filter === "All" || drink.kind === filter);
 
   useEffect(() => {
     const updateSection = () => {
       const hash = window.location.hash;
-      setActiveSection(hash === "#drinks" ? "drinks" : hash === "#toppings" ? "toppings" : "about");
+      setActiveSection(hash === "#drinks" ? "drinks" : hash === "#toppings" ? "toppings" : hash === "#card" ? "card" : "about");
     };
     window.addEventListener("hashchange", updateSection);
     const frame = requestAnimationFrame(updateSection);
@@ -149,7 +151,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
     <div className="site-shell" id="top">
       <aside className="sidebar">
         <div className="identity"><div className="dog-kaomoji" aria-hidden="true"><span>U・ᴥ・U</span><small>~ woof ~</small></div><a href="#top" className="site-name">jelly coffee lab</a></div>
-        <nav className="sidebar-nav" aria-label="Main navigation"><a href="#about" className={activeSection === "about" ? "current" : undefined} aria-current={activeSection === "about" ? "location" : undefined}>{activeSection === "about" ? "> " : ""}about</a><a href="#drinks" className={activeSection === "drinks" ? "current" : undefined} aria-current={activeSection === "drinks" ? "location" : undefined}>{activeSection === "drinks" ? "> " : ""}drinks</a><a href="#toppings" className={activeSection === "toppings" ? "current" : undefined} aria-current={activeSection === "toppings" ? "location" : undefined}>{activeSection === "toppings" ? "> " : ""}toppings</a></nav>
+        <nav className="sidebar-nav" aria-label="Main navigation"><a href="#about" className={activeSection === "about" ? "current" : undefined} aria-current={activeSection === "about" ? "location" : undefined}>{activeSection === "about" ? "> " : ""}about</a><a href="#drinks" className={activeSection === "drinks" ? "current" : undefined} aria-current={activeSection === "drinks" ? "location" : undefined}>{activeSection === "drinks" ? "> " : ""}drinks</a><a href="#toppings" className={activeSection === "toppings" ? "current" : undefined} aria-current={activeSection === "toppings" ? "location" : undefined}>{activeSection === "toppings" ? "> " : ""}toppings</a><a href="#card" className={activeSection === "card" ? "current" : undefined} aria-current={activeSection === "card" ? "location" : undefined}>{activeSection === "card" ? "> " : ""}card</a></nav>
         <div className="theme-picker" role="group" aria-label="Color theme">
           <div className="sidebar-label">THEME / <span>{themes.find((option) => option.id === theme)?.label}</span></div>
           <div className="theme-options">{themes.map((option) => <button key={option.id} type="button" className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.label} theme`} aria-pressed={theme === option.id} title={option.label}>
@@ -175,6 +177,18 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
           <div className="section-heading"><span className="section-label">TOPPINGS.TXT</span><h2 id="toppings-title">toppings</h2><p>The bits we put on top.</p></div>
           <div className="list-header"><span>FILE NAME</span><span>{toppings.length} FILE</span></div>
           {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} />)}
+        </section>
+        <section id="card" className="recipe-section home-card" aria-labelledby="card-title">
+          <div className="section-heading"><span className="section-label">CARD.TXT</span><h2 id="card-title">the little card</h2><p>Print your favorite recipe and keep it close.</p></div>
+          <Card3D theme={theme} />
+          <div className="home-card-print">
+            <h3>flat &amp; ready to print</h3>
+            <p className="home-card-print-note">3.5 × 2 in · vector SVG · {themes.find((option) => option.id === theme)?.label} colors</p>
+            <div className="flat-grid">
+              <figure><Image src={cardDataUrl(theme, "front")} width={1050} height={600} unoptimized alt="Printable recipe front for honey oat espresso with a small dog logo" /><figcaption><span>FRONT / RECIPE 02</span><a href={cardDataUrl(theme, "front")} download={`jelly-coffee-lab-${theme}-front.svg`}>download SVG ↓</a></figcaption></figure>
+              <figure><Image src={cardDataUrl(theme, "back")} width={1050} height={600} unoptimized alt="Printable back with the Jelly Coffee Lab dog logo and shop name" /><figcaption><span>BACK / ORIGINAL MARK</span><a href={cardDataUrl(theme, "back")} download={`jelly-coffee-lab-${theme}-back.svg`}>download SVG ↓</a></figcaption></figure>
+            </div>
+          </div>
         </section>
         <footer><span>© jelly coffee lab</span><a href="#top">back to top ↑</a></footer>
       </main>

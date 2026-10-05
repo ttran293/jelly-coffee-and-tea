@@ -1,6 +1,6 @@
 # Jelly Coffee Lab
 
-A small coffee and tea recipe notebook. The page has About, Drinks, and Toppings sections, with three drinks and one topping. It also has four visitor-selectable color themes and a Supabase visit counter. The selected theme is saved in a one-year cookie; Butter Paper is the default.
+A small coffee and tea recipe notebook. The page has About, Drinks, Toppings, and Card sections, with three drinks and one topping. The homepage card section has an interactive 3D preview and printable front and back SVG artwork that follow the selected color theme. The site also has four visitor-selectable color themes and a Supabase visit counter. The selected theme is saved in a one-year cookie; Butter Paper is the default.
 
 ## Run locally
 

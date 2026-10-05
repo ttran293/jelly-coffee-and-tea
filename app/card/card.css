@@ -1,0 +1,30 @@
+.card-3d-wrap { position: relative; height: clamp(340px, 47vw, 560px); overflow: hidden; border: 1px solid var(--line); background: radial-gradient(ellipse at 50% 42%, color-mix(in srgb, var(--page) 45%, var(--accent-ink) 55%) 0%, color-mix(in srgb, var(--page) 65%, var(--accent-ink) 35%) 100%); }
+.card-3d-wrap::before { content: ""; position: absolute; left: 28%; right: 28%; bottom: 14%; height: 12%; border-radius: 50%; background: #1b182d55; filter: blur(22px); }
+.card-3d-canvas, .card-3d-fallback { width: 100%; height: 100%; display: block; position: relative; touch-action: none; }
+.card-3d-canvas { cursor: grab; }
+.card-3d-canvas:active { cursor: grabbing; }
+.card-3d-fallback { object-fit: contain; padding: 9%; }
+.card-3d-actions { position: absolute; bottom: 20px; left: 22px; right: 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--muted-ink); font-size: 11px; pointer-events: none; }
+.card-3d-buttons { display: flex; gap: 6px; pointer-events: auto; }
+.card-3d-actions button { pointer-events: auto; background: var(--ink); color: var(--page); border: 0; padding: 11px 15px; font: inherit; cursor: pointer; }
+.card-3d-actions button:hover { background: var(--accent-ink); color: var(--page); }
+.card-3d-actions button + button { background: var(--panel); color: var(--ink); border: 1px solid var(--line); padding: 10px 14px; }
+.card-3d-actions button + button:hover { background: var(--page); color: var(--accent-ink); }
+.card-3d-actions button:focus-visible, .flat-grid a:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
+
+.home-card-print { margin-top: 20px; border-top: 1px solid var(--line); }
+.home-card-print h3 { margin: 0; padding: 17px 0 0; color: var(--accent-ink); font-size: 14px; font-weight: 500; }
+.home-card-print-note { margin: 3px 0 20px; color: var(--muted-ink); font-size: 12px; }
+.flat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding-bottom: 8px; }
+.flat-grid figure { min-width: 0; margin: 0; }
+.flat-grid img { display: block; width: 100%; height: auto; aspect-ratio: 7 / 4; box-shadow: 0 13px 27px color-mix(in srgb, var(--ink) 13%, transparent), 0 3px 7px color-mix(in srgb, var(--ink) 10%, transparent); }
+.flat-grid figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 15px; color: var(--muted-ink); font-size: 11px; letter-spacing: .07em; }
+.flat-grid a { color: var(--accent-ink); letter-spacing: 0; font-size: 12px; }
+.flat-grid a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+@media (max-width: 750px) { .flat-grid { grid-template-columns: 1fr; gap: 30px; } }
+@media (max-width: 480px) {
+  .card-3d-wrap { height: 310px; }
+  .card-3d-actions { bottom: 14px; left: 14px; right: 14px; }
+  .card-3d-actions > span { display: none; }
+}
