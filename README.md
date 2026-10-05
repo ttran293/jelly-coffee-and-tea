@@ -17,12 +17,14 @@ Open `http://127.0.0.1:5173/`.
 
 Create `.env.local` from `.env.example` and set `SUPABASE_URL` and `SUPABASE_SECRET_KEY`. The secret is read only by `app/api/visits/route.ts`. Local environment files are ignored by `.gitignore`.
 
-Run [`supabase/page-visits.sql`](supabase/page-visits.sql) once in the Supabase SQL Editor. The counter records one visit per browser every 24 hours; refreshes show the current total.
+Run [`supabase/page-visits.sql`](supabase/page-visits.sql) once in the Supabase SQL Editor. The counter records one visit per browser every 24 hours; refreshes show the current total. Set the same two variables in Vercel's project environment settings for the deployed counter.
 
 ## Build
 
 ```sh
 npm run build
 ```
+
+The site uses Next.js. Vercel should use the Next.js framework preset and the default `.next` output directory.
 
 The main page is in `app/page.tsx`, its styles are in `app/globals.css`, and the drink images are in `public/`.

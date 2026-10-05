@@ -27,10 +27,16 @@ async function countVisits(url: string, key: string) {
 }
 
 export async function POST(request: Request) {
-  const requestOrigin = new URL(request.url).origin;
   const origin = request.headers.get("origin");
-  if (origin && origin !== requestOrigin) {
-    return Response.json({ error: "Invalid origin" }, { status: 403 });
+  if (origin) {
+    try {
+      const host = request.headers.get("host") ?? new URL(request.url).host;
+      if (new URL(origin).host !== host) {
+        return Response.json({ error: "Invalid origin" }, { status: 403 });
+      }
+    } catch {
+      return Response.json({ error: "Invalid origin" }, { status: 403 });
+    }
   }
 
   const config = supabaseConfig();
@@ -53,7 +59,8 @@ export async function POST(request: Request) {
         cache: "no-store",
       });
       if (!insert.ok) return unavailable();
-      headers.set("Set-Cookie", `${VISIT_COOKIE}=1; Path=/; Max-Age=${VISIT_WINDOW_SECONDS}; HttpOnly; SameSite=Lax${requestOrigin.startsWith("https:") ? "; Secure" : ""}`);
+      const secure = request.headers.get("x-forwarded-proto") === "https" || new URL(request.url).protocol === "https:";
+      headers.set("Set-Cookie", `${VISIT_COOKIE}=1; Path=/; Max-Age=${VISIT_WINDOW_SECONDS}; HttpOnly; SameSite=Lax${secure ? "; Secure" : ""}`);
     }
 
     const count = await countVisits(config.url, config.key);
