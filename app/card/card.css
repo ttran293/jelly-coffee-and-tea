@@ -15,9 +15,10 @@
 .home-card-print { margin-top: 20px; border-top: 1px solid var(--line); }
 .home-card-print h3 { margin: 0; padding: 17px 0 0; color: var(--accent-ink); font-size: 14px; font-weight: 500; }
 .home-card-print-note { margin: 3px 0 20px; color: var(--muted-ink); font-size: 12px; }
+.home-card-print-tip { margin: 16px 0 0; color: var(--muted-ink); font-size: 12px; line-height: 1.6; }
 .flat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding-bottom: 8px; }
 .flat-grid figure { min-width: 0; margin: 0; }
-.flat-grid img { display: block; width: 100%; height: auto; aspect-ratio: 7 / 4; box-shadow: 0 13px 27px color-mix(in srgb, var(--ink) 13%, transparent), 0 3px 7px color-mix(in srgb, var(--ink) 10%, transparent); }
+.flat-grid img { display: block; width: 100%; height: auto; aspect-ratio: 5 / 3; box-shadow: 0 13px 27px color-mix(in srgb, var(--ink) 13%, transparent), 0 3px 7px color-mix(in srgb, var(--ink) 10%, transparent); }
 .flat-grid figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 15px; color: var(--muted-ink); font-size: 11px; letter-spacing: .07em; }
 .flat-grid a { color: var(--accent-ink); letter-spacing: 0; font-size: 12px; }
 .flat-grid a:hover { text-decoration: underline; text-underline-offset: 4px; }

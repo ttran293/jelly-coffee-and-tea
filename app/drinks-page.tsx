@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { THEME_COOKIE, type ThemeName } from "./theme";
 import { Card3D } from "./card/studio";
-import { cardDataUrl } from "./card/artwork";
+import { CARD_SIZE, cardDataUrl } from "./card/artwork";
 
 type Recipe = {
   id: string; number: string; name: string; kind: "Tea" | "Coffee" | "Topping"; typeLabel?: string; folder?: string;
@@ -183,11 +183,12 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
           <Card3D theme={theme} />
           <div className="home-card-print">
             <h3>flat &amp; ready to print</h3>
-            <p className="home-card-print-note">3.5 × 2 in · vector SVG · {themes.find((option) => option.id === theme)?.label} colors</p>
+            <p className="home-card-print-note">5 × 3 in · vector SVG · {themes.find((option) => option.id === theme)?.label} colors · ⅛ in punch guide</p>
             <div className="flat-grid">
-              <figure><Image src={cardDataUrl(theme, "front")} width={1050} height={600} unoptimized alt="Printable recipe front for honey oat espresso with a small dog logo" /><figcaption><span>FRONT / RECIPE 02</span><a href={cardDataUrl(theme, "front")} download={`jelly-coffee-lab-${theme}-front.svg`}>download SVG ↓</a></figcaption></figure>
-              <figure><Image src={cardDataUrl(theme, "back")} width={1050} height={600} unoptimized alt="Printable back with the Jelly Coffee Lab dog logo and shop name" /><figcaption><span>BACK / ORIGINAL MARK</span><a href={cardDataUrl(theme, "back")} download={`jelly-coffee-lab-${theme}-back.svg`}>download SVG ↓</a></figcaption></figure>
+              <figure><Image src={cardDataUrl(theme, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Printable 5 by 3 inch recipe front for honey oat espresso with a small dog logo" /><figcaption><span>FRONT / RECIPE 02</span><a href={cardDataUrl(theme, "front")} download={`jelly-coffee-lab-${theme}-front.svg`}>download SVG ↓</a></figcaption></figure>
+              <figure><Image src={cardDataUrl(theme, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Printable 5 by 3 inch back with the Jelly Coffee Lab dog logo and shop name" /><figcaption><span>BACK / ORIGINAL MARK</span><a href={cardDataUrl(theme, "back")} download={`jelly-coffee-lab-${theme}-back.svg`}>download SVG ↓</a></figcaption></figure>
             </div>
+            <p className="home-card-print-tip">Print at actual size on cardstock. Punch the white circles, then gather the cards on a book ring. The back guide is mirrored to line up on a double-sided print.</p>
           </div>
         </section>
         <footer><span>© jelly coffee lab</span><a href="#top">back to top ↑</a></footer>

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { ThemeName } from "../theme";
-import { cardDataUrl, cardPalette, cardSvg } from "./artwork";
+import { CARD_SIZE, cardDataUrl, cardPalette, cardSvg } from "./artwork";
 
 function compileShader(gl: WebGLRenderingContext, type: number, source: string) {
   const shader = gl.createShader(type);
@@ -51,7 +51,7 @@ export function Card3D({ theme }: { theme: ThemeName }) {
         vUv = aUv;
         vLight = 0.76 + 0.24 * max(dot(normalize(n), normalize(vec3(-0.35, 0.5, 1.0))), 0.0);
         // Orthographic projection keeps the artwork square and fits narrow screens.
-        float scale = min(0.67, uAspect * 0.58);
+        float scale = min(0.78, uAspect * 0.58);
         gl_Position = vec4(p.x * scale / uAspect, p.y * scale, -p.z * 0.1, 1.0);
       }
     `;
@@ -59,10 +59,15 @@ export function Card3D({ theme }: { theme: ThemeName }) {
       precision mediump float;
       uniform sampler2D uTexture;
       uniform float uTextured;
+      uniform float uHoleX;
       uniform vec3 uColor;
       varying vec2 vUv;
       varying float vLight;
       void main() {
+        if (uTextured > 0.5) {
+          vec2 hole = vec2((vUv.x - uHoleX) * ${CARD_SIZE.width.toFixed(1)}, (vUv.y - ${(1 - CARD_SIZE.holeInset / CARD_SIZE.height).toFixed(6)}) * ${CARD_SIZE.height.toFixed(1)});
+          if (dot(hole, hole) < ${(CARD_SIZE.holeRadius ** 2).toFixed(6)}) discard;
+        }
         vec4 color = uTextured > 0.5 ? texture2D(uTexture, vUv) : vec4(uColor, 1.0);
         gl_FragColor = vec4(color.rgb * vLight, color.a);
       }
@@ -112,6 +117,7 @@ export function Card3D({ theme }: { theme: ThemeName }) {
     const rotationUniform = gl.getUniformLocation(programRef, "uRotation");
     const aspectUniform = gl.getUniformLocation(programRef, "uAspect");
     const texturedUniform = gl.getUniformLocation(programRef, "uTextured");
+    const holeXUniform = gl.getUniformLocation(programRef, "uHoleX");
     const colorUniform = gl.getUniformLocation(programRef, "uColor");
     const textureUniform = gl.getUniformLocation(programRef, "uTexture");
     gl.uniform1i(textureUniform, 0);
@@ -146,14 +152,15 @@ export function Card3D({ theme }: { theme: ThemeName }) {
     const backTexture = makeTexture(cardSvg(theme, "back", true));
 
     const halfDepth = .006;
+    const halfHeight = .9;
     const face = (z: number, normal: number) => {
       const vertices = [
-      -1.5, -.857, z, normal > 0 ? 0 : 1, 0, 0, 0, normal,
-       1.5, -.857, z, normal > 0 ? 1 : 0, 0, 0, 0, normal,
-       1.5,  .857, z, normal > 0 ? 1 : 0, 1, 0, 0, normal,
-      -1.5, -.857, z, normal > 0 ? 0 : 1, 0, 0, 0, normal,
-       1.5,  .857, z, normal > 0 ? 1 : 0, 1, 0, 0, normal,
-      -1.5,  .857, z, normal > 0 ? 0 : 1, 1, 0, 0, normal,
+      -1.5, -halfHeight, z, normal > 0 ? 0 : 1, 0, 0, 0, normal,
+       1.5, -halfHeight, z, normal > 0 ? 1 : 0, 0, 0, 0, normal,
+       1.5,  halfHeight, z, normal > 0 ? 1 : 0, 1, 0, 0, normal,
+      -1.5, -halfHeight, z, normal > 0 ? 0 : 1, 0, 0, 0, normal,
+       1.5,  halfHeight, z, normal > 0 ? 1 : 0, 1, 0, 0, normal,
+      -1.5,  halfHeight, z, normal > 0 ? 0 : 1, 1, 0, 0, normal,
       ];
       if (normal > 0) return vertices;
       const vertexAt = (index: number) => vertices.slice(index * 8, index * 8 + 8);
@@ -162,14 +169,15 @@ export function Card3D({ theme }: { theme: ThemeName }) {
     const quad = (a: number[], b: number[], c: number[], d: number[], n: number[]) =>
       [a, b, c, a, c, d].flatMap((point, index) => [...point, index % 3 === 0 ? 0 : 1, index < 3 ? 0 : 1, ...n]);
     const edges = [
-      quad([-1.5, -.857, halfDepth], [-1.5, .857, halfDepth], [-1.5, .857, -halfDepth], [-1.5, -.857, -halfDepth], [-1, 0, 0]),
-      quad([1.5, -.857, -halfDepth], [1.5, .857, -halfDepth], [1.5, .857, halfDepth], [1.5, -.857, halfDepth], [1, 0, 0]),
-      quad([-1.5, .857, halfDepth], [1.5, .857, halfDepth], [1.5, .857, -halfDepth], [-1.5, .857, -halfDepth], [0, 1, 0]),
-      quad([-1.5, -.857, -halfDepth], [1.5, -.857, -halfDepth], [1.5, -.857, halfDepth], [-1.5, -.857, halfDepth], [0, -1, 0]),
+      quad([-1.5, -halfHeight, halfDepth], [-1.5, halfHeight, halfDepth], [-1.5, halfHeight, -halfDepth], [-1.5, -halfHeight, -halfDepth], [-1, 0, 0]),
+      quad([1.5, -halfHeight, -halfDepth], [1.5, halfHeight, -halfDepth], [1.5, halfHeight, halfDepth], [1.5, -halfHeight, halfDepth], [1, 0, 0]),
+      quad([-1.5, halfHeight, halfDepth], [1.5, halfHeight, halfDepth], [1.5, halfHeight, -halfDepth], [-1.5, halfHeight, -halfDepth], [0, 1, 0]),
+      quad([-1.5, -halfHeight, -halfDepth], [1.5, -halfHeight, -halfDepth], [1.5, -halfHeight, halfDepth], [-1.5, -halfHeight, halfDepth], [0, -1, 0]),
     ];
-    const draw = (vertices: number[], texture?: WebGLTexture) => {
+    const draw = (vertices: number[], texture?: WebGLTexture, holeX = 0) => {
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
       gl.uniform1f(texturedUniform, texture ? 1 : 0);
+      gl.uniform1f(holeXUniform, holeX);
       if (texture) gl.bindTexture(gl.TEXTURE_2D, texture);
       else gl.uniform3f(colorUniform, edge[0], edge[1], edge[2]);
       gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 8);
@@ -185,8 +193,8 @@ export function Card3D({ theme }: { theme: ThemeName }) {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.uniform2f(rotationUniform, rotation.current.x, rotation.current.y);
       gl.uniform1f(aspectUniform, canvas.width / canvas.height);
-      draw(face(halfDepth, 1), frontTexture);
-      draw(face(-halfDepth, -1), backTexture);
+      draw(face(halfDepth, 1), frontTexture, CARD_SIZE.holeInset / CARD_SIZE.width);
+      draw(face(-halfDepth, -1), backTexture, 1 - CARD_SIZE.holeInset / CARD_SIZE.width);
       for (const edge of edges) draw(edge);
       frame = requestAnimationFrame(render);
     };
@@ -205,7 +213,7 @@ export function Card3D({ theme }: { theme: ThemeName }) {
 
   const drag = useRef<{ x: number; y: number } | null>(null);
   return <div className="card-3d-wrap">
-    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label="Interactive WebGL preview of the Jelly Coffee Lab card" onPointerDown={(event) => { drag.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (!drag.current) return; rotation.current.y += (event.clientX - drag.current.x) * .009; rotation.current.x += (event.clientY - drag.current.y) * .006; drag.current = { x: event.clientX, y: event.clientY }; }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, "front")} width={1050} height={600} unoptimized alt="Jelly Coffee Lab card front" />}
+    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label="Interactive WebGL preview of the Jelly Coffee Lab card" onPointerDown={(event) => { drag.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (!drag.current) return; rotation.current.y += (event.clientX - drag.current.x) * .009; rotation.current.x += (event.clientY - drag.current.y) * .006; drag.current = { x: event.clientX, y: event.clientY }; }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Jelly Coffee Lab card front" />}
     <div className="card-3d-actions"><div className="card-3d-buttons"><button type="button" onClick={() => { rotation.current.y += Math.PI; }}>flip card ↻</button><button type="button" onClick={() => { rotation.current = { x: -.08, y: -.28 }; }}>reset view</button></div><span>drag to rotate 360°</span></div>
   </div>;
 }

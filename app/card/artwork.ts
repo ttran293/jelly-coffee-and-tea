@@ -2,6 +2,9 @@ import type { ThemeName } from "../theme";
 
 type CardSide = "front" | "back";
 
+// 210 SVG units per inch on a 5 × 3 inch landscape card.
+export const CARD_SIZE = { width: 1050, height: 630, holeInset: 52.5, holeRadius: 13.125 } as const;
+
 const palettes: Record<ThemeName, { paper: string; ink: string; accent: string; muted: string; line: string }> = {
   butter: { paper: "#f4ebcf", ink: "#292c3e", accent: "#ae3854", muted: "#646470", line: "#b9ad9b" },
   blueberry: { paper: "#232841", ink: "#fbf3e5", accent: "#a8d9f0", muted: "#b9c4d8", line: "#68728d" },
@@ -15,10 +18,14 @@ export function cardPalette(theme: ThemeName) {
 
 export function cardSvg(theme: ThemeName, side: CardSide, texture = false) {
   const color = palettes[theme];
-  const size = texture ? 'width="1680" height="960"' : 'width="3.5in" height="2in"';
-  const start = `<svg xmlns="http://www.w3.org/2000/svg" ${size} viewBox="0 0 1050 600">
-  <rect width="1050" height="600" fill="${color.paper}"/>
-  <rect x="24" y="24" width="1002" height="552" rx="14" fill="none" stroke="${color.line}" stroke-width="2"/>`;
+  const size = texture ? 'width="1680" height="1008"' : 'width="5in" height="3in"';
+  // Mirroring the mark on the reverse keeps one physical punch aligned on a duplex print.
+  const holeX = side === "front" ? CARD_SIZE.holeInset : CARD_SIZE.width - CARD_SIZE.holeInset;
+  const start = `<svg xmlns="http://www.w3.org/2000/svg" ${size} viewBox="0 0 ${CARD_SIZE.width} ${CARD_SIZE.height}">
+  <rect width="${CARD_SIZE.width}" height="${CARD_SIZE.height}" fill="${color.paper}"/>
+  <rect x="18" y="18" width="1014" height="594" rx="12" fill="none" stroke="${color.line}" stroke-width="2"/>
+  <circle cx="${holeX}" cy="${CARD_SIZE.holeInset}" r="22.5" fill="none" stroke="${color.accent}" stroke-width="2.5"/>
+  <circle cx="${holeX}" cy="${CARD_SIZE.holeInset}" r="${CARD_SIZE.holeRadius}" fill="#fff" stroke="${color.accent}" stroke-width="1.5"/>`;
 
   if (side === "back") {
     return `${start}
@@ -31,7 +38,7 @@ export function cardSvg(theme: ThemeName, side: CardSide, texture = false) {
   }
 
   return `${start}
-  <text x="71" y="88" fill="${color.accent}" font-family="Courier New, monospace" font-size="24" letter-spacing="4">RECIPE CARD / 02</text>
+  <text x="101" y="72" fill="${color.accent}" font-family="Courier New, monospace" font-size="24" letter-spacing="4">RECIPE CARD / 02</text>
   <text x="770" y="104" transform="rotate(-4 882 85)" fill="${color.accent}" font-family="Segoe UI Symbol, IBM Plex Mono, monospace" font-size="72" font-weight="500" letter-spacing="-8">U・ᴥ・U</text>
   <text x="69" y="170" fill="${color.ink}" font-family="Arial, Helvetica, sans-serif" font-size="60" font-weight="700" letter-spacing="-2">Honey oat espresso</text>
   <text x="784" y="171" fill="${color.accent}" font-family="Courier New, monospace" font-size="22">5 MIN · 1 GLASS</text>
