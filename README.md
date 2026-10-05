@@ -1,6 +1,6 @@
 # Jelly Coffee Lab
 
-A small coffee and tea recipe notebook. The page has two sample drinks, four visitor-selectable color themes, and a Supabase visit counter. The selected theme is saved in a one-year cookie; Butter Paper is the default.
+A small coffee and tea recipe notebook. The page has three drinks, four visitor-selectable color themes, and a Supabase visit counter. The selected theme is saved in a one-year cookie; Butter Paper is the default.
 
 ## Run locally
 

@@ -5,9 +5,10 @@ import Image from "next/image";
 import { THEME_COOKIE, type ThemeName } from "./theme";
 
 type Drink = {
-  id: string; number: string; name: string; kind: "Tea" | "Coffee";
-  description: string; image: string; time: string; yield: string;
-  ingredients: string[]; method: string[]; note: string;
+  id: string; number: string; name: string; kind: "Tea" | "Coffee"; typeLabel?: string;
+  description: string; image?: string; time: string; yield: string; lastMade?: string;
+  ingredients: string[]; ingredientGroups?: { title: string; items: string[] }[];
+  method: string[]; note?: string; variations?: string[]; sample?: boolean;
 };
 
 const themes: { id: ThemeName; label: string; colors: string[] }[] = [
@@ -32,7 +33,7 @@ const drinks: Drink[] = [
     time: "8 min", yield: "1 glass",
     ingredients: ["3 fresh strawberries (about 45 g)", "12 g strawberry jam", "2 g matcha powder", "30 ml warm water (about 80°C / 176°F)", "150 ml cold milk of choice", "40 ml cold vanilla cream or sweet foam", "Ice"],
     method: ["Mash the strawberries with the jam in the bottom of a tall glass.", "Whisk matcha with warm water until smooth and lightly foamy.", "Fill the glass with ice, then pour in the milk.", "Slowly add the matcha. Spoon the vanilla cream on top and serve right away."],
-    note: "12 g jam worked. Next time: try 6 g and see if the layers still hold.",
+    note: "12 g jam worked. Next time: try 6 g and see if the layers still hold.", sample: true,
   },
   {
     id: "honey-oat-espresso", number: "02", name: "Honey oat espresso", kind: "Coffee",
@@ -40,7 +41,27 @@ const drinks: Drink[] = [
     time: "5 min", yield: "1 glass",
     ingredients: ["1 double espresso (about 36 g)", "12 g honey", "150 ml chilled oat milk", "A tiny pinch of flaky salt", "Ice"],
     method: ["Stir the honey and salt into the hot espresso until dissolved.", "Fill a short glass with ice and add the oat milk.", "Pour the espresso over the milk. Give it one gentle stir before sipping."],
-    note: "We keep forgetting the salt. It makes a difference. Darker espresso next time?",
+    note: "We keep forgetting the salt. It makes a difference. Darker espresso next time?", sample: true,
+  },
+  {
+    id: "basic-matcha-latte", number: "03", name: "Go-to Basic Matcha Latte", kind: "Tea", typeLabel: "Matcha",
+    description: "Matcha, milk, syrup if wanted.",
+    time: "5–10 min", yield: "1 glass", lastMade: "September 7, 2026",
+    ingredients: [],
+    ingredientGroups: [
+      { title: "Matcha (ratio 1:10:30)", items: ["3 g matcha", "30 g water at 175°F", "90–100 ml milk of choice"] },
+      { title: "To assemble", items: ["Ice (optional)", "1 tsp syrup of choice"] },
+    ],
+    method: [
+      "Whisk the matcha: Sift matcha into a bowl or mug, add hot water, and whisk until smooth and frothy.",
+      "Build the drink: Fill a glass with ice. Add syrup if using, then add milk.",
+      "Add matcha: Pour the matcha over the milk.",
+      "Serve: Stir before drinking (or sip layered).",
+    ],
+    variations: [
+      "For a stronger matcha flavor, increase matcha or use less milk.",
+      "Ratio 1:10:30 means 1 g matcha, 10 ml water, 30 ml milk. Multiply as needed.",
+    ],
   },
 ];
 
@@ -86,7 +107,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
           </button>)}</div>
         </div>
         <div className="visit-count" aria-live="polite"><span>VISITS</span><strong>{visitCount === null ? "------" : String(visitCount).padStart(6, "0")}</strong></div>
-        <div className="sidebar-bottom">2 recipes here so far<br />last note: keep the ice</div>
+        <div className="sidebar-bottom">{drinks.length} recipes here so far<br />last note: keep the ice</div>
       </aside>
 
       <main className="main-content">
@@ -100,13 +121,15 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
             const isOpen = selected?.id === drink.id;
             return <div className="drink-entry" key={drink.id}>
               <button id={`drink-${drink.id}`} type="button" className="drink-row" onClick={() => setSelected(isOpen ? null : drink)} aria-expanded={isOpen} aria-controls={`recipe-${drink.id}`} aria-label={`${isOpen ? "Hide" : "Read"} ${drink.name} recipe`}>
-                <span className="drink-number">{drink.number} /</span><span className="drink-info"><strong>{drink.name}</strong><small>{drink.description}</small></span><span className="drink-kind">{drink.kind.toUpperCase()}</span><span className="row-arrow" aria-hidden="true">{isOpen ? "−" : "+"}</span>
+                <span className="drink-number">{drink.number} /</span><span className="drink-info"><strong>{drink.name}</strong><small>{drink.description}</small></span><span className="drink-kind">{(drink.typeLabel ?? drink.kind).toUpperCase()}</span><span className="row-arrow" aria-hidden="true">{isOpen ? "−" : "+"}</span>
               </button>
               {isOpen && <article id={`recipe-${drink.id}`} className="recipe-sheet" role="region" aria-labelledby={`recipe-title-${drink.id}`}>
-                <div className="recipe-sheet-head"><span className="recipe-overline">~/jelly/recipe-{drink.number}.txt <span>·</span> {drink.kind.toUpperCase()}</span><button type="button" className="recipe-close" onClick={() => { setSelected(null); document.getElementById(`drink-${drink.id}`)?.focus(); }}>close ×</button></div>
-                <div className="recipe-lead"><div className="recipe-image"><Image src={drink.image} alt={`${drink.name} in a glass`} width={150} height={160} sizes="(max-width: 520px) 92px, 150px" /></div><div className="recipe-lead-copy"><h2 id={`recipe-title-${drink.id}`} className="recipe-title">{drink.name}</h2><p className="recipe-intro">{drink.description}</p><div className="recipe-facts"><span>TIME <strong>{drink.time}</strong></span><span>MAKES <strong>{drink.yield}</strong></span></div></div></div>
-                <div className="recipe-columns"><section><h3>What you&apos;ll need</h3><ul>{drink.ingredients.map((item) => <li key={item}>{item}</li>)}</ul></section><section><h3>Make it</h3><ol>{drink.method.map((step) => <li key={step}>{step}</li>)}</ol></section></div>
-                <p className="lab-note"><strong>Note:</strong> {drink.note}</p><p className="sample-label">[ sample recipe / version 01 ]</p>
+                <div className="recipe-sheet-head"><span className="recipe-overline">~/jelly/recipe-{drink.number}.txt <span>·</span> {(drink.typeLabel ?? drink.kind).toUpperCase()}</span><button type="button" className="recipe-close" onClick={() => { setSelected(null); document.getElementById(`drink-${drink.id}`)?.focus(); }}>close ×</button></div>
+                <div className={drink.image ? "recipe-lead" : "recipe-lead recipe-lead--text"}>{drink.image && <div className="recipe-image"><Image src={drink.image} alt={`${drink.name} in a glass`} width={150} height={160} sizes="(max-width: 520px) 92px, 150px" /></div>}<div className="recipe-lead-copy"><h2 id={`recipe-title-${drink.id}`} className="recipe-title">{drink.name}</h2><p className="recipe-intro">{drink.description}</p><div className="recipe-facts"><span>TIME <strong>{drink.time}</strong></span><span>MAKES <strong>{drink.yield}</strong></span>{drink.lastMade && <span>LAST MADE <strong>{drink.lastMade}</strong></span>}</div></div></div>
+                <div className="recipe-columns"><section><h3>What you&apos;ll need</h3>{drink.ingredientGroups ? drink.ingredientGroups.map((group) => <div className="recipe-ingredient-group" key={group.title}><h4>{group.title}</h4><ul>{group.items.map((item) => <li key={item}>{item}</li>)}</ul></div>) : <ul>{drink.ingredients.map((item) => <li key={item}>{item}</li>)}</ul>}</section><section><h3>Make it</h3><ol>{drink.method.map((step) => <li key={step}>{step}</li>)}</ol></section></div>
+                {drink.note && <p className="lab-note"><strong>Note:</strong> {drink.note}</p>}
+                {drink.variations && <div className="lab-note"><strong>Notes / variations</strong><ul>{drink.variations.map((item) => <li key={item}>{item}</li>)}</ul></div>}
+                {drink.sample && <p className="sample-label">[ sample recipe / version 01 ]</p>}
               </article>}
             </div>;
           })}
