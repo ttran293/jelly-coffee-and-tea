@@ -4,6 +4,9 @@ let paperDecoded: Promise<AudioBuffer> | null = null;
 let paperBuffer: AudioBuffer | null = null;
 let waitingForPaper = false;
 let enabled = true;
+let barkFile: Promise<ArrayBuffer> | null = null;
+let barkDecoded: Promise<AudioBuffer> | null = null;
+let barkBuffer: AudioBuffer | null = null;
 
 export function setAudioEnabled(value: boolean) {
   enabled = value;
@@ -15,6 +18,23 @@ export function preloadPaper() {
     return response.arrayBuffer();
   });
   return paperFile;
+}
+
+// CC0 Pomeranian recording by yunjish: https://freesound.org/people/yunjish/sounds/608732/
+export function preloadBark() {
+  barkFile ??= fetch("/sounds/pomeranian-bark.mp3").then((response) => {
+    if (!response.ok) throw new Error("Dog bark unavailable");
+    return response.arrayBuffer();
+  });
+  return barkFile;
+}
+
+function decodeBark(context: AudioContext) {
+  barkDecoded ??= preloadBark().then((data) => context.decodeAudioData(data.slice(0))).then((decoded) => {
+    barkBuffer = decoded;
+    return decoded;
+  });
+  return barkDecoded;
 }
 
 function decodePaper(context: AudioContext) {
@@ -31,6 +51,7 @@ export function unlockAudio() {
   audio ??= new AudioContext();
   if (audio.state === "suspended") void audio.resume();
   void decodePaper(audio).catch(() => {});
+  void decodeBark(audio).catch(() => {});
 }
 
 function readyAudio() {
@@ -66,6 +87,41 @@ export function playPaper(strength = 1, full = false) {
   if (waitingForPaper) return;
   waitingForPaper = true;
   void decodePaper(context).then(() => playRecordedPaper(context, strength, full)).catch(() => {}).finally(() => { waitingForPaper = false; });
+}
+
+function playCardBark(level: number, rate: number, delay = 0) {
+  const context = readyAudio();
+  if (!context || !enabled) return;
+  if (!barkBuffer) {
+    void decodeBark(context).then(() => playCardBark(level, rate, delay)).catch(() => {});
+    return;
+  }
+  const start = context.currentTime + delay;
+  const duration = barkBuffer.duration / rate;
+  const source = context.createBufferSource();
+  const volume = context.createGain();
+  source.buffer = barkBuffer;
+  source.playbackRate.value = rate;
+  volume.gain.setValueAtTime(0.0001, start);
+  volume.gain.linearRampToValueAtTime(level, start + 0.008);
+  volume.gain.setValueAtTime(level, start + duration - 0.045);
+  volume.gain.linearRampToValueAtTime(0.0001, start + duration);
+  source.connect(volume).connect(context.destination);
+  source.start(start);
+  source.onended = () => { source.disconnect(); volume.disconnect(); };
+}
+
+export function playCardHover() {
+  playCardBark(0.65, 1);
+}
+
+export function playCardGrab() {
+  playCardBark(0.45, 1);
+}
+
+export function playCardFlip() {
+  playCardBark(0.72, 1);
+  playCardBark(0.62, 1.03, 0.27);
 }
 
 function playSoftNote(pitch: number, delay: number, duration: number) {

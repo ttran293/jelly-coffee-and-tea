@@ -4,11 +4,31 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { THEME_COOKIE, type ThemeName } from "./theme";
 import { Card3D } from "./card/studio";
+import { HeroCup } from "./hero-cup";
 import { CARD_SIZE, cardDataUrl } from "./card/artwork";
+import { cardPngDataUrl } from "./card/download";
 import { CARD_RECIPES, FEATURED_CARD_INDEX } from "./card/recipes";
 import { playMenu, playPaper, playTheme, setAudioEnabled, unlockAudio } from "./sound";
 
 const featuredCard = CARD_RECIPES[FEATURED_CARD_INDEX];
+
+function CardPngDownload({ theme, side }: { theme: ThemeName; side: "front" | "back" }) {
+  const [png, setPng] = useState<{ theme: ThemeName; side: "front" | "back"; url: string } | null>(null);
+  const url = png?.theme === theme && png.side === side ? png.url : undefined;
+
+  useEffect(() => {
+    let active = true;
+    void cardPngDataUrl(theme, featuredCard, side).then((dataUrl) => {
+      if (active) setPng({ theme, side, url: dataUrl });
+    }).catch(() => {
+      if (active) setPng({ theme, side, url: "" });
+    });
+    return () => { active = false; };
+  }, [theme, side]);
+
+  const failed = png?.theme === theme && png.side === side && png.url === "";
+  return <a href={url || undefined} download={`jelly-coffee-lab-${theme}-${featuredCard.id}-${side}.png`} aria-disabled={!url}>{url ? "download PNG ↓" : failed ? "PNG unavailable" : "preparing PNG…"}</a>;
+}
 const sectionIds = ["about", "drinks", "toppings", "card"] as const;
 
 type Recipe = {
@@ -193,8 +213,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
       if (!soundEnabled || !(event.target instanceof Element)) return;
       const control = event.target.closest("button, a");
       if (!control || control.classList.contains("sound-toggle")) return;
-      if (control.matches(".card-3d-buttons button:first-child")) playPaper(0.9, true);
-      else if (control.matches(".drink-row, .recipe-close, .card-3d-buttons button")) playPaper(0.7);
+      if (control.matches(".drink-row, .recipe-close")) playPaper(0.7);
       else if (control.matches(".theme-option") && control.getAttribute("aria-pressed") !== "true") playTheme();
       else if (control.matches(".sidebar-nav a")) playMenu();
     }}>
@@ -214,7 +233,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
 
       <main className="main-content">
         <div className="path">~/jelly/index.txt</div>
-        <section id="about" className="about about-first" aria-label="About this page"><span className="section-label">ABOUT.TXT</span><h1>recipe log<span className="cursor">_</span></h1><p>We kept forgetting the good ratios. This is our little place to keep them.</p><div className="about-ascii" aria-hidden="true">{`[ coffee ] + [ tea ] = ♡`}</div></section>
+        <section id="about" className="about about-first" aria-label="About this page"><div className="about-hero"><div className="about-copy"><span className="section-label">ABOUT.TXT</span><h1>recipe log<span className="cursor">_</span></h1><p>We kept forgetting the good ratios. This is our little place to keep them.</p><div className="about-ascii" aria-hidden="true">{`[ coffee ] + [ tea ] = ♡`}</div></div><HeroCup /></div></section>
 
         <section id="drinks" className="recipe-section drink-list" aria-labelledby="drinks-title">
           <div className="section-heading"><span className="section-label">DRINKS.TXT</span><h2 id="drinks-title">drinks</h2><p className="testing-line"><span tabIndex={0}>What we are testing.</span></p></div>
@@ -230,15 +249,15 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
         </section>
         <section id="card" className="recipe-section home-card" aria-labelledby="card-title">
           <div className="section-heading"><span className="section-label">CARD.TXT</span><h2 id="card-title">the little card</h2><p>Print it, punch it, save for later.</p></div>
-          <Card3D theme={theme} onPaper={() => { if (soundEnabled) playPaper(); }} />
+          <Card3D theme={theme} />
           <div className="home-card-print">
             <h3>flat &amp; ready to print</h3>
-            <p className="home-card-print-note">5 × 3 in · vector SVG · {themes.find((option) => option.id === theme)?.label} colors · ⅛ in punch guide</p>
+            <p className="home-card-print-note">5 × 3 in · 1500 × 900 px PNG · {themes.find((option) => option.id === theme)?.label} colors · ⅛ in punch guide</p>
             <div className="flat-grid">
-              <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Printable 5 by 3 inch recipe front for ${featuredCard.title} with a small dog logo`} /><figcaption><span>FRONT / RECIPE {featuredCard.number}</span><a href={cardDataUrl(theme, featuredCard, "front")} download={`jelly-coffee-lab-${theme}-${featuredCard.id}-front.svg`}>download SVG ↓</a></figcaption></figure>
-              <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Printable 5 by 3 inch back with the Jelly Coffee Lab dog logo and shop name" /><figcaption><span>BACK / ORIGINAL MARK</span><a href={cardDataUrl(theme, featuredCard, "back")} download={`jelly-coffee-lab-${theme}-${featuredCard.id}-back.svg`}>download SVG ↓</a></figcaption></figure>
+              <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Printable 5 by 3 inch recipe front for ${featuredCard.title} with a small dog logo`} /><figcaption><span>FRONT / RECIPE {featuredCard.number}</span><CardPngDownload theme={theme} side="front" /></figcaption></figure>
+              <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Printable 5 by 3 inch back with the Jelly Coffee Lab dog logo and shop name" /><figcaption><span>BACK / ORIGINAL MARK</span><CardPngDownload theme={theme} side="back" /></figcaption></figure>
             </div>
-            <p className="home-card-print-tip">Print at actual size on cardstock. Punch the white circles, then gather the cards on a book ring. The back guide is mirrored to line up on a double-sided print.</p>
+            <p className="home-card-print-tip">Print at 5 × 3 in on cardstock. Punch the white circles, then gather the cards on a book ring. The back guide is mirrored to line up on a double-sided print.</p>
           </div>
         </section>
         <footer><span>© jelly coffee lab</span><a href="#top">back to top ↑</a></footer>

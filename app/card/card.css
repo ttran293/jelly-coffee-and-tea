@@ -1,4 +1,4 @@
-.card-3d-wrap { position: relative; height: clamp(340px, 47vw, 560px); overflow: hidden; border: 1px solid var(--line); background: radial-gradient(ellipse at 50% 42%, color-mix(in srgb, var(--page) 45%, var(--accent-ink) 55%) 0%, color-mix(in srgb, var(--page) 65%, var(--accent-ink) 35%) 100%); }
+.card-3d-wrap { position: relative; isolation: isolate; height: clamp(340px, 47vw, 560px); overflow: hidden; border: 1px solid var(--line); background: radial-gradient(ellipse at 50% 42%, color-mix(in srgb, var(--page) 45%, var(--accent-ink) 55%) 0%, color-mix(in srgb, var(--page) 65%, var(--accent-ink) 35%) 100%); }
 html[data-theme="cloud"] .card-3d-wrap { background: radial-gradient(ellipse at 52% 29%, #b5c9e7 0%, #91aed8 72%, #7698c9 100%); }
 html[data-theme="blush"] .card-3d-wrap { background: radial-gradient(ellipse at 52% 29%, #e6b8ce 0%, #cc9fb9 70%, #ad83a4 100%); }
 html[data-theme="spring"] .card-3d-wrap { background: radial-gradient(ellipse at 52% 29%, #bcd4cf 0%, #99b5c0 70%, #7895af 100%); }
@@ -32,7 +32,8 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 :is(html[data-theme="cloud"], html[data-theme="blush"], html[data-theme="spring"], html[data-theme="nightfall"], html[data-theme="peach"], html[data-theme="tidal"], html[data-theme="garden"]) .flat-grid img { box-shadow: 0 16px 34px #111b3d66, 0 3px 8px #111b3d44; }
 .flat-grid figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 15px; color: var(--muted-ink); font-size: 11px; letter-spacing: .07em; }
 .flat-grid a { color: var(--accent-ink); letter-spacing: 0; font-size: 12px; }
-.flat-grid a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.flat-grid a[href]:hover { text-decoration: underline; text-underline-offset: 4px; }
+.flat-grid a[aria-disabled="true"] { color: var(--muted-ink); cursor: wait; }
 
 @media (max-width: 750px) { .flat-grid { grid-template-columns: 1fr; gap: 30px; } }
 @media (max-width: 480px) {

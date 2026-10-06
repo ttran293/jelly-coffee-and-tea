@@ -6,7 +6,7 @@ import * as THREE from "three";
 import type { ThemeName } from "../theme";
 import { CARD_SIZE, cardDataUrl, cardPalette } from "./artwork";
 import { CARD_RECIPES, FEATURED_CARD_INDEX } from "./recipes";
-import { preloadPaper } from "../sound";
+import { playCardFlip, playCardGrab, playCardHover, preloadBark } from "../sound";
 
 const cardWidth = 3;
 const cardHeight = 1.8;
@@ -41,16 +41,17 @@ function printedFace(shape: THREE.Shape) {
   return geometry;
 }
 
-export function Card3D({ theme, onPaper }: { theme: ThemeName; onPaper: () => void }) {
+export function Card3D({ theme }: { theme: ThemeName }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotation = useRef({ x: -0.08, y: -0.28 });
-  const drag = useRef<{ x: number; y: number; sounding: boolean } | null>(null);
+  const drag = useRef<{ x: number; y: number } | null>(null);
   const hitCard = useRef<(x: number, y: number) => boolean>(() => false);
-  const lastRustle = useRef(0);
+  const hoveringCard = useRef(false);
+  const lastHoverBark = useRef(0);
   const [supported, setSupported] = useState(true);
 
   useEffect(() => {
-    void preloadPaper().catch(() => {});
+    void preloadBark().catch(() => {});
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -184,14 +185,20 @@ export function Card3D({ theme, onPaper }: { theme: ThemeName; onPaper: () => vo
   }, [theme]);
 
   return <div className="card-3d-wrap">
-    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label={`Interactive Three.js book ring with ${CARD_RECIPES.length} recipe cards; ${CARD_RECIPES[FEATURED_CARD_INDEX].title} on top`} onPointerDown={(event) => { const sounding = hitCard.current(event.clientX, event.clientY); drag.current = { x: event.clientX, y: event.clientY, sounding }; event.currentTarget.setPointerCapture(event.pointerId); if (sounding) { onPaper(); lastRustle.current = event.timeStamp; } }} onPointerMove={(event) => {
-      if (!drag.current) return;
-      const distance = Math.hypot(event.clientX - drag.current.x, event.clientY - drag.current.y);
+    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label={`Interactive Three.js book ring with ${CARD_RECIPES.length} recipe cards; ${CARD_RECIPES[FEATURED_CARD_INDEX].title} on top`} onPointerDown={(event) => { const sounding = hitCard.current(event.clientX, event.clientY); drag.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); if (sounding) { playCardGrab(); hoveringCard.current = true; } }} onPointerMove={(event) => {
+      if (!drag.current) {
+        const hovering = hitCard.current(event.clientX, event.clientY);
+        if (hovering && !hoveringCard.current && (lastHoverBark.current === 0 || event.timeStamp - lastHoverBark.current > 1800)) {
+          playCardHover();
+          lastHoverBark.current = event.timeStamp;
+        }
+        hoveringCard.current = hovering;
+        return;
+      }
       rotation.current.y += (event.clientX - drag.current.x) * 0.009;
       rotation.current.x += (event.clientY - drag.current.y) * 0.006;
-      drag.current = { x: event.clientX, y: event.clientY, sounding: drag.current.sounding };
-      if (drag.current.sounding && distance > 2 && event.timeStamp - lastRustle.current > 320) { onPaper(); lastRustle.current = event.timeStamp; }
-    }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, CARD_RECIPES[FEATURED_CARD_INDEX], "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`${CARD_RECIPES[FEATURED_CARD_INDEX].title} recipe card`} />}
-    <div className="card-3d-actions"><div className="card-3d-buttons"><button type="button" onClick={() => { rotation.current.y += Math.PI; }}>flip stack ↻</button><button type="button" onClick={() => { rotation.current = { x: -0.08, y: -0.28 }; }}>reset view</button></div><span>drag to rotate 360°</span></div>
+      drag.current = { x: event.clientX, y: event.clientY };
+    }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} onPointerLeave={() => { hoveringCard.current = false; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, CARD_RECIPES[FEATURED_CARD_INDEX], "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`${CARD_RECIPES[FEATURED_CARD_INDEX].title} recipe card`} />}
+    <div className="card-3d-actions"><div className="card-3d-buttons"><button type="button" onClick={() => { rotation.current.y += Math.PI; playCardFlip(); }}>flip stack ↻</button><button type="button" onClick={() => { rotation.current = { x: -0.08, y: -0.28 }; playCardGrab(); }}>reset view</button></div><span>drag to rotate 360°</span></div>
   </div>;
 }
