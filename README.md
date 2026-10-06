@@ -28,3 +28,7 @@ npm run build
 The site uses Next.js. Vercel should use the Next.js framework preset and the default `.next` output directory.
 
 The main page is in `app/page.tsx`, its styles are in `app/globals.css`, and the drink images are in `public/`.
+
+## Sound credit
+
+The card uses a trimmed recording of [“Turning a page” by planish](https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg), released into the public domain. The original Ogg and the edited MP3 are in `public/sounds/`.

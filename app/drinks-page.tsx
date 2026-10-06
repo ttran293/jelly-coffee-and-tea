@@ -6,8 +6,10 @@ import { THEME_COOKIE, type ThemeName } from "./theme";
 import { Card3D } from "./card/studio";
 import { CARD_SIZE, cardDataUrl } from "./card/artwork";
 import { CARD_RECIPES, FEATURED_CARD_INDEX } from "./card/recipes";
+import { playMenu, playPaper, playTheme, setAudioEnabled, unlockAudio } from "./sound";
 
 const featuredCard = CARD_RECIPES[FEATURED_CARD_INDEX];
+const sectionIds = ["about", "drinks", "toppings", "card"] as const;
 
 type Recipe = {
   id: string; number: string; name: string; kind: "Tea" | "Coffee" | "Topping"; typeLabel?: string; folder?: string;
@@ -117,16 +119,35 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [visitCount, setVisitCount] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState<"about" | "drinks" | "toppings" | "card">("about");
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const visibleDrinks = drinks.filter((drink) => filter === "All" || drink.kind === filter);
 
   useEffect(() => {
     const updateSection = () => {
-      const hash = window.location.hash;
-      setActiveSection(hash === "#drinks" ? "drinks" : hash === "#toppings" ? "toppings" : hash === "#card" ? "card" : "about");
+      const readingLine = Math.min(window.innerHeight * 0.35, 280);
+      let visibleSection: (typeof sectionIds)[number] = "about";
+      for (const id of sectionIds) {
+        const section = document.getElementById(id);
+        if (section && section.getBoundingClientRect().top <= readingLine) visibleSection = id;
+      }
+      if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) visibleSection = "card";
+      setActiveSection(visibleSection);
     };
-    window.addEventListener("hashchange", updateSection);
-    const frame = requestAnimationFrame(updateSection);
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("hashchange", updateSection); };
+    let frame = 0;
+    const scheduleUpdate = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => { frame = 0; updateSection(); });
+    };
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("hashchange", scheduleUpdate);
+    scheduleUpdate();
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("hashchange", scheduleUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -150,17 +171,33 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
     saveThemeCookie(choice);
   }
 
+  function toggleSound() {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    setAudioEnabled(next);
+    if (next) unlockAudio();
+  }
+
   return <>
-    <div className="site-shell" id="top">
+    <div className="site-shell" id="top" onPointerDownCapture={() => { if (soundEnabled) unlockAudio(); }} onKeyDownCapture={(event) => { if (soundEnabled && (event.key === "Enter" || event.key === " ")) unlockAudio(); }} onClickCapture={(event) => {
+      if (!soundEnabled || !(event.target instanceof Element)) return;
+      const control = event.target.closest("button, a");
+      if (!control || control.classList.contains("sound-toggle")) return;
+      if (control.matches(".card-3d-buttons button:first-child")) playPaper(0.9, true);
+      else if (control.matches(".drink-row, .recipe-close, .card-3d-buttons button")) playPaper(0.7);
+      else if (control.matches(".theme-option") && control.getAttribute("aria-pressed") !== "true") playTheme();
+      else if (control.matches(".sidebar-nav a")) playMenu();
+    }}>
       <aside className="sidebar">
         <div className="identity"><div className="dog-kaomoji" aria-hidden="true"><span>U・ᴥ・U</span><small>~ woof ~</small></div><a href="#top" className="site-name">jelly coffee lab</a></div>
         <nav className="sidebar-nav" aria-label="Main navigation"><a href="#about" className={activeSection === "about" ? "current" : undefined} aria-current={activeSection === "about" ? "location" : undefined}>{activeSection === "about" ? "> " : ""}about</a><a href="#drinks" className={activeSection === "drinks" ? "current" : undefined} aria-current={activeSection === "drinks" ? "location" : undefined}>{activeSection === "drinks" ? "> " : ""}drinks</a><a href="#toppings" className={activeSection === "toppings" ? "current" : undefined} aria-current={activeSection === "toppings" ? "location" : undefined}>{activeSection === "toppings" ? "> " : ""}toppings</a><a href="#card" className={activeSection === "card" ? "current" : undefined} aria-current={activeSection === "card" ? "location" : undefined}>{activeSection === "card" ? "> " : ""}card</a></nav>
-        <div className="theme-picker" role="group" aria-label="Color theme">
+        <div className="theme-picker">
           <div className="sidebar-label">THEME / <span>{themes.find((option) => option.id === theme)?.label}</span></div>
-          <div className="theme-options">{themes.map((option) => <button key={option.id} type="button" className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.label} theme`} aria-pressed={theme === option.id} title={option.label}>
+          <div className="theme-options" role="group" aria-label="Color theme">{themes.map((option) => <button key={option.id} type="button" className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.label} theme`} aria-pressed={theme === option.id} title={option.label}>
             <span className="theme-swatch" style={{ background: option.colors[0], color: option.colors[1], borderColor: option.colors[1] }}><i style={{ background: option.colors[2] }} /><i style={{ background: option.colors[3] }} /></span><span className="theme-name">{option.label}</span>
           </button>)}</div>
         </div>
+        <div className="sound-setting"><span className="sidebar-label">SOUND</span><button type="button" className="sound-toggle" aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"} aria-pressed={soundEnabled} title={soundEnabled ? "Mute sounds" : "Enable sounds"} onClick={toggleSound}><span aria-hidden="true">♪</span> {soundEnabled ? "on" : "off"}</button></div>
         <div className="visit-count" aria-live="polite"><span>VISITS</span><strong>{visitCount === null ? "------" : String(visitCount).padStart(6, "0")}</strong></div>
         <div className="sidebar-bottom">{drinks.length} drinks + {toppings.length} topping<br />last note: don&apos;t overmix</div>
       </aside>
@@ -183,7 +220,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
         </section>
         <section id="card" className="recipe-section home-card" aria-labelledby="card-title">
           <div className="section-heading"><span className="section-label">CARD.TXT</span><h2 id="card-title">the little card</h2><p>A ring-bound recipe card, shown with our go-to basic matcha latte.</p></div>
-          <Card3D theme={theme} />
+          <Card3D theme={theme} onPaper={() => { if (soundEnabled) playPaper(); }} />
           <div className="home-card-print">
             <h3>flat &amp; ready to print</h3>
             <p className="home-card-print-note">5 × 3 in · vector SVG · {themes.find((option) => option.id === theme)?.label} colors · ⅛ in punch guide</p>

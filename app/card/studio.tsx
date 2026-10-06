@@ -6,6 +6,7 @@ import * as THREE from "three";
 import type { ThemeName } from "../theme";
 import { CARD_SIZE, cardDataUrl, cardPalette } from "./artwork";
 import { CARD_RECIPES, FEATURED_CARD_INDEX } from "./recipes";
+import { preloadPaper } from "../sound";
 
 const cardWidth = 3;
 const cardHeight = 1.8;
@@ -40,13 +41,16 @@ function printedFace(shape: THREE.Shape) {
   return geometry;
 }
 
-export function Card3D({ theme }: { theme: ThemeName }) {
+export function Card3D({ theme, onPaper }: { theme: ThemeName; onPaper: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotation = useRef({ x: -0.08, y: -0.28 });
-  const drag = useRef<{ x: number; y: number } | null>(null);
+  const drag = useRef<{ x: number; y: number; sounding: boolean } | null>(null);
+  const hitCard = useRef<(x: number, y: number) => boolean>(() => false);
+  const lastRustle = useRef(0);
   const [supported, setSupported] = useState(true);
 
   useEffect(() => {
+    void preloadPaper().catch(() => {});
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -86,6 +90,7 @@ export function Card3D({ theme }: { theme: ThemeName }) {
     const backTexture = loadArt(0, "back");
     const frontShape = cardShape();
     const backShape = cardShape(true);
+    const cardMeshes: THREE.Mesh[] = [];
     CARD_RECIPES.forEach((_, index) => {
       const group = new THREE.Group();
       const rank = (index - FEATURED_CARD_INDEX + CARD_RECIPES.length) % CARD_RECIPES.length;
@@ -98,6 +103,7 @@ export function Card3D({ theme }: { theme: ThemeName }) {
       );
       body.position.set(-holeX, -holeY, -0.006);
       group.add(body);
+      cardMeshes.push(body);
 
       const front = new THREE.Mesh(
         printedFace(frontShape),
@@ -105,6 +111,7 @@ export function Card3D({ theme }: { theme: ThemeName }) {
       );
       front.position.set(-holeX, -holeY, 0.007);
       group.add(front);
+      cardMeshes.push(front);
 
       const back = new THREE.Mesh(
         printedFace(backShape),
@@ -113,6 +120,7 @@ export function Card3D({ theme }: { theme: ThemeName }) {
       back.rotation.y = Math.PI;
       back.position.set(-holeX, -holeY, -0.007);
       group.add(back);
+      cardMeshes.push(back);
 
       stack.add(group);
     });
@@ -125,6 +133,15 @@ export function Card3D({ theme }: { theme: ThemeName }) {
     ring.rotation.y = Math.PI / 2;
     ring.position.set(holeX, holeY + 0.13, 0.035);
     stack.add(ring);
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    hitCard.current = (clientX, clientY) => {
+      const bounds = canvas.getBoundingClientRect();
+      pointer.set(((clientX - bounds.left) / bounds.width) * 2 - 1, -((clientY - bounds.top) / bounds.height) * 2 + 1);
+      raycaster.setFromCamera(pointer, camera);
+      return raycaster.intersectObjects(cardMeshes, false).length > 0;
+    };
 
     const resize = () => {
       const width = Math.max(1, canvas.clientWidth);
@@ -153,6 +170,7 @@ export function Card3D({ theme }: { theme: ThemeName }) {
 
     return () => {
       cancelAnimationFrame(frame);
+      hitCard.current = () => false;
       observer.disconnect();
       scene.traverse((object) => {
         if (!(object instanceof THREE.Mesh)) return;
@@ -166,7 +184,14 @@ export function Card3D({ theme }: { theme: ThemeName }) {
   }, [theme]);
 
   return <div className="card-3d-wrap">
-    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label={`Interactive Three.js book ring with ${CARD_RECIPES.length} recipe cards; ${CARD_RECIPES[FEATURED_CARD_INDEX].title} on top`} onPointerDown={(event) => { drag.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (!drag.current) return; rotation.current.y += (event.clientX - drag.current.x) * 0.009; rotation.current.x += (event.clientY - drag.current.y) * 0.006; drag.current = { x: event.clientX, y: event.clientY }; }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, CARD_RECIPES[FEATURED_CARD_INDEX], "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`${CARD_RECIPES[FEATURED_CARD_INDEX].title} recipe card`} />}
+    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label={`Interactive Three.js book ring with ${CARD_RECIPES.length} recipe cards; ${CARD_RECIPES[FEATURED_CARD_INDEX].title} on top`} onPointerDown={(event) => { const sounding = hitCard.current(event.clientX, event.clientY); drag.current = { x: event.clientX, y: event.clientY, sounding }; event.currentTarget.setPointerCapture(event.pointerId); if (sounding) { onPaper(); lastRustle.current = event.timeStamp; } }} onPointerMove={(event) => {
+      if (!drag.current) return;
+      const distance = Math.hypot(event.clientX - drag.current.x, event.clientY - drag.current.y);
+      rotation.current.y += (event.clientX - drag.current.x) * 0.009;
+      rotation.current.x += (event.clientY - drag.current.y) * 0.006;
+      drag.current = { x: event.clientX, y: event.clientY, sounding: drag.current.sounding };
+      if (drag.current.sounding && distance > 2 && event.timeStamp - lastRustle.current > 320) { onPaper(); lastRustle.current = event.timeStamp; }
+    }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, CARD_RECIPES[FEATURED_CARD_INDEX], "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`${CARD_RECIPES[FEATURED_CARD_INDEX].title} recipe card`} />}
     <div className="card-3d-actions"><div className="card-3d-buttons"><button type="button" onClick={() => { rotation.current.y += Math.PI; }}>flip stack ↻</button><button type="button" onClick={() => { rotation.current = { x: -0.08, y: -0.28 }; }}>reset view</button></div><span>drag to rotate 360°</span></div>
   </div>;
 }
