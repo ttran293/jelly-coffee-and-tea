@@ -23,7 +23,17 @@ const themes: { id: ThemeName; label: string; colors: string[] }[] = [
   { id: "blueberry", label: "Blueberry", colors: ["#232841", "#fbf3e5", "#a8d9f0", "#f3ae91"] },
   { id: "cherry", label: "Cherry Cola", colors: ["#40252e", "#fff1df", "#ffb49d", "#f2d17c"] },
   { id: "lilac", label: "Lilac Screen", colors: ["#dedaf0", "#302d4a", "#6852af", "#b65475"] },
+  { id: "cloud", label: "Cloud Wash", colors: ["#ffffff", "#263b5c", "#fff2c9", "#cbd7ef"] },
+  { id: "blush", label: "Blush Sky", colors: ["#ffffff", "#263b5c", "#c9e0ff", "#fecbcc"] },
+  { id: "spring", label: "Spring Mist", colors: ["#ffffff", "#263b5c", "#e0ffc9", "#cbd7fe"] },
+  { id: "nightfall", label: "Nightfall", colors: ["#ffcee3", "#fff4f8", "#678ec9", "#262277"] },
+  { id: "peach", label: "Peach Dusk", colors: ["#ffe28d", "#fff3e0", "#fac1a8", "#13193d"] },
+  { id: "tidal", label: "Tidal", colors: ["#f9d2e4", "#f7fff9", "#67c9b5", "#007e79"] },
+  { id: "garden", label: "Garden Glow", colors: ["#fedfcb", "#fff3e9", "#106816", "#fcc2eb"] },
 ];
+
+const visibleThemes = themes.filter((option) => option.id === "blush" || option.id === "spring" || option.id === "garden");
+const gradientThemes = new Set<ThemeName>(["cloud", "blush", "spring", "nightfall", "peach", "tidal", "garden"]);
 
 function applyTheme(choice: ThemeName) {
   document.documentElement.dataset.theme = choice;
@@ -193,8 +203,8 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
         <nav className="sidebar-nav" aria-label="Main navigation"><a href="#about" className={activeSection === "about" ? "current" : undefined} aria-current={activeSection === "about" ? "location" : undefined}>{activeSection === "about" ? "> " : ""}about</a><a href="#drinks" className={activeSection === "drinks" ? "current" : undefined} aria-current={activeSection === "drinks" ? "location" : undefined}>{activeSection === "drinks" ? "> " : ""}drinks</a><a href="#toppings" className={activeSection === "toppings" ? "current" : undefined} aria-current={activeSection === "toppings" ? "location" : undefined}>{activeSection === "toppings" ? "> " : ""}toppings</a><a href="#card" className={activeSection === "card" ? "current" : undefined} aria-current={activeSection === "card" ? "location" : undefined}>{activeSection === "card" ? "> " : ""}card</a></nav>
         <div className="theme-picker">
           <div className="sidebar-label">THEME / <span>{themes.find((option) => option.id === theme)?.label}</span></div>
-          <div className="theme-options" role="group" aria-label="Color theme">{themes.map((option) => <button key={option.id} type="button" className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.label} theme`} aria-pressed={theme === option.id} title={option.label}>
-            <span className="theme-swatch" style={{ background: option.colors[0], color: option.colors[1], borderColor: option.colors[1] }}><i style={{ background: option.colors[2] }} /><i style={{ background: option.colors[3] }} /></span><span className="theme-name">{option.label}</span>
+          <div className="theme-options" role="group" aria-label="Color theme">{visibleThemes.map((option) => <button key={option.id} type="button" className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.label} theme`} aria-pressed={theme === option.id} title={option.label}>
+            <span className="theme-swatch" style={{ background: gradientThemes.has(option.id) ? `linear-gradient(90deg, ${option.colors[0]} 0%, ${option.colors[2]} 50%, ${option.colors[3]} 100%)` : option.colors[0], color: option.colors[1], borderColor: option.colors[1] }}><i style={{ background: option.colors[2] }} /><i style={{ background: option.colors[3] }} /></span><span className="theme-name">{option.label}</span>
           </button>)}</div>
         </div>
         <div className="sound-setting"><span className="sidebar-label">SOUND</span><button type="button" className="sound-toggle" aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"} aria-pressed={soundEnabled} title={soundEnabled ? "Mute sounds" : "Enable sounds"} onClick={toggleSound}><span aria-hidden="true">♪</span> {soundEnabled ? "on" : "off"}</button></div>

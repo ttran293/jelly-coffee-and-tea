@@ -11,6 +11,13 @@ const palettes: Record<ThemeName, { paper: string; ink: string; accent: string; 
   blueberry: { paper: "#232841", ink: "#fbf3e5", accent: "#a8d9f0", muted: "#b9c4d8", line: "#68728d" },
   cherry: { paper: "#40252e", ink: "#fff1df", accent: "#ffb49d", muted: "#d8bdb7", line: "#93636c" },
   lilac: { paper: "#dedaf0", ink: "#302d4a", accent: "#6852af", muted: "#67627a", line: "#a19abf" },
+  cloud: { paper: "#fffdf6", ink: "#263b5c", accent: "#5677a7", muted: "#526985", line: "#8fa9cc" },
+  blush: { paper: "#fffdfb", ink: "#263b5c", accent: "#a85f7c", muted: "#65718a", line: "#bd9aaf" },
+  spring: { paper: "#fcfff9", ink: "#263b5c", accent: "#6478aa", muted: "#5c7180", line: "#a3b6c8" },
+  nightfall: { paper: "#ffcee3", ink: "#262277", accent: "#395898", muted: "#596181", line: "#a89fbf" },
+  peach: { paper: "#ffe28d", ink: "#13193d", accent: "#624664", muted: "#726278", line: "#ae8b85" },
+  tidal: { paper: "#f9d2e4", ink: "#124d57", accent: "#007e79", muted: "#526d70", line: "#9eabb6" },
+  garden: { paper: "#fedfcb", ink: "#254b27", accent: "#106816", muted: "#5c6850", line: "#a9a98b" },
 };
 
 export function cardPalette(theme: ThemeName) {

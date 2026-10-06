@@ -1,6 +1,6 @@
 # Jelly Coffee Lab
 
-A small coffee and tea recipe notebook. The page has About, Drinks, Toppings, and Card sections, with three drinks and one topping. The homepage card section has a Three.js book-ring preview featuring the go-to basic matcha latte, plus matching printable front and back SVG artwork. The site also has four visitor-selectable color themes and a Supabase visit counter. The selected theme is saved in a one-year cookie; Butter Paper is the default.
+A small coffee and tea recipe notebook. The page has About, Drinks, Toppings, and Card sections, with three drinks and one topping. The homepage card section has a Three.js book-ring preview featuring the go-to basic matcha latte, plus matching printable front and back SVG artwork. Visitors can choose Blush Sky, Spring Mist, or Garden Glow; the other theme palettes remain in the project. The site also has a Supabase visit counter. The selected theme is saved in a one-year cookie; Blush Sky is the default.
 
 ## Run locally
 
