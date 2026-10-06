@@ -29,6 +29,16 @@ function CardPngDownload({ theme, side }: { theme: ThemeName; side: "front" | "b
   const failed = png?.theme === theme && png.side === side && png.url === "";
   return <a href={url || undefined} download={`jelly-coffee-lab-${theme}-${featuredCard.id}-${side}.png`} aria-disabled={!url}>{url ? "download PNG ↓" : failed ? "PNG unavailable" : "preparing PNG…"}</a>;
 }
+
+function CardSheetDownload({ theme }: { theme: ThemeName }) {
+  return <div className="card-sheet-download">
+    <p>One PDF, both sides: fronts on page 1 and aligned backs on page 2.</p>
+    <div className="card-sheet-buttons">
+      <a href={`/api/card-sheet?size=business&theme=${theme}`} download>download business card sheet ↓<small>3.5 × 2 in · 10 per Letter sheet</small></a>
+      <a href={`/api/card-sheet?size=recipe&theme=${theme}`} download>download larger recipe sheet ↓<small>5 × 3 in · 3 per Letter sheet</small></a>
+    </div>
+  </div>;
+}
 const sectionIds = ["about", "drinks", "toppings", "card"] as const;
 
 type Recipe = {
@@ -100,6 +110,30 @@ const drinks: Recipe[] = [
       "Ratio 1:10:30 means 1 g matcha, 10 ml water, 30 ml milk. Multiply as needed.",
     ],
   },
+  {
+    id: "brown-sugar-hojicha", number: "04", name: "Iced brown sugar hojicha", kind: "Tea", typeLabel: "Hojicha",
+    description: "Roasted tea, oat milk, brown sugar.",
+    time: "5 min", yield: "1 glass",
+    ingredients: ["1 tsp hojicha powder", "60 ml warm water (80°C / 175°F or cooler)", "180 ml chilled oat milk", "10–15 ml brown sugar syrup (recipe below)", "Ice"],
+    method: [
+      "Whisk the hojicha powder with a splash of the warm water until smooth. Add the remaining water and whisk again.",
+      "Add brown sugar syrup to a glass, then fill it with ice and pour in the oat milk.",
+      "Pour the hojicha over the milk. Stir before drinking, adding a little more syrup if needed.",
+    ],
+    note: "A little water first keeps the powder from clumping.",
+  },
+  {
+    id: "orange-espresso-tonic", number: "05", name: "Orange espresso tonic", kind: "Coffee",
+    description: "Bright orange, cold tonic, espresso.",
+    time: "5 min", yield: "1 glass",
+    ingredients: ["1 espresso shot (about 35–40 ml)", "120 ml chilled tonic water", "15 ml fresh orange juice", "A strip of orange peel", "Ice"],
+    method: [
+      "Fill a tall glass with ice. Add the chilled tonic water and orange juice.",
+      "Pull the espresso into a separate cup, then pour it slowly over the ice to make a dark top layer.",
+      "Twist the orange peel over the glass and drop it in. Give the drink a gentle stir before sipping.",
+    ],
+    note: "Keep the tonic cold and pour slowly so the bubbles stay lively.",
+  },
 ];
 
 const toppings: Recipe[] = [
@@ -122,6 +156,30 @@ const toppings: Recipe[] = [
       "Add 1 tbsp cream cheese if desired.",
       "Don't overmix the foam. It should pour off a spoon.",
     ],
+  },
+  {
+    id: "brown-sugar-syrup", number: "02", name: "Brown sugar syrup", kind: "Topping", folder: "topping",
+    description: "A quick caramel-like sweetener for tea and coffee.",
+    time: "10 min + cooling", yield: "about 150 ml", tag: "Make ahead",
+    ingredients: ["100 g dark brown sugar", "100 ml water", "A tiny pinch of salt (optional)"],
+    method: [
+      "Add the brown sugar and water to a small saucepan. Warm over medium-low heat, stirring until the sugar dissolves.",
+      "Let it bubble gently for 1–2 minutes, then take it off the heat and stir in the salt if using.",
+      "Cool completely before adding to an iced drink. Start with 10–15 ml per glass and adjust to taste.",
+    ],
+    note: "Try it in the iced hojicha latte above.",
+  },
+  {
+    id: "vanilla-cold-foam", number: "03", name: "Vanilla cold foam", kind: "Topping", folder: "topping",
+    description: "Soft vanilla foam that pours over iced drinks.",
+    time: "5 min", yield: "2 drinks", tag: "Quick",
+    ingredients: ["60 ml cold heavy cream", "30 ml cold milk", "10 ml vanilla syrup", "A tiny pinch of salt"],
+    method: [
+      "Combine the cold cream, milk, vanilla syrup, and salt in a tall cup or small frothing pitcher.",
+      "Froth with a handheld frother for 15–25 seconds, just until thickened but still pourable.",
+      "Spoon or pour over two iced drinks right away.",
+    ],
+    note: "Stop before it becomes whipped cream; it should settle gently on the drink.",
   },
 ];
 
@@ -228,7 +286,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
         </div>
         <div className="sound-setting"><span className="sidebar-label">SOUND</span><button type="button" className="sound-toggle" aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"} aria-pressed={soundEnabled} title={soundEnabled ? "Mute sounds" : "Enable sounds"} onClick={toggleSound}><span aria-hidden="true">♪</span> {soundEnabled ? "on" : "off"}</button></div>
         <div className="visit-count" aria-live="polite"><span>VISITS</span><strong>{visitCount === null ? "------" : String(visitCount).padStart(6, "0")}</strong></div>
-        <div className="sidebar-bottom">{drinks.length} drinks + {toppings.length} topping<br />last note: don&apos;t overmix</div>
+        <div className="sidebar-bottom">{drinks.length} drinks + {toppings.length} {toppings.length === 1 ? "topping" : "toppings"}<br />last note: don&apos;t overmix</div>
       </aside>
 
       <main className="main-content">
@@ -244,20 +302,30 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
 
         <section id="toppings" className="recipe-section topping-list" aria-labelledby="toppings-title">
           <div className="section-heading"><span className="section-label">TOPPINGS.TXT</span><h2 id="toppings-title">toppings</h2><p>The bits we put on top.</p></div>
-          <div className="list-header"><span>FILE NAME</span><span>{toppings.length} FILE</span></div>
+          <div className="list-header"><span>FILE NAME</span><span>{toppings.length} {toppings.length === 1 ? "FILE" : "FILES"}</span></div>
           {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} />)}
         </section>
         <section id="card" className="recipe-section home-card" aria-labelledby="card-title">
           <div className="section-heading"><span className="section-label">CARD.TXT</span><h2 id="card-title">the little card</h2><p>Print it, punch it, save for later.</p></div>
           <Card3D theme={theme} />
           <div className="home-card-print">
-            <h3>flat &amp; ready to print</h3>
-            <p className="home-card-print-note">5 × 3 in · 1500 × 900 px PNG · {themes.find((option) => option.id === theme)?.label} colors · ⅛ in punch guide</p>
+            <h3>print the card</h3>
+            <CardSheetDownload theme={theme} />
+            <div className="card-print-settings">
+              <h4>print settings / PDF</h4>
+              <ul>
+                <li><strong>Paper:</strong> US Letter (8.5 × 11 in), color, one PDF page per sheet</li>
+                <li><strong>Size:</strong> Actual Size / 100% — not Fit or Shrink</li>
+                <li><strong>Sides:</strong> Double-sided, flip on long edge</li>
+                <li><strong>Paper type:</strong> Cardstock, heavyweight, or matte, if your printer offers it</li>
+              </ul>
+            </div>
+            <p className="home-card-print-note">Individual 5 × 3 in artwork · 1500 × 900 px PNG · {themes.find((option) => option.id === theme)?.label} colors · ⅛ in punch guide</p>
             <div className="flat-grid">
               <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Printable 5 by 3 inch recipe front for ${featuredCard.title} with a small dog logo`} /><figcaption><span>FRONT / RECIPE {featuredCard.number}</span><CardPngDownload theme={theme} side="front" /></figcaption></figure>
               <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Printable 5 by 3 inch back with the Jelly Coffee Lab dog logo and shop name" /><figcaption><span>BACK / ORIGINAL MARK</span><CardPngDownload theme={theme} side="back" /></figcaption></figure>
             </div>
-            <p className="home-card-print-tip">Print at 5 × 3 in on cardstock. Punch the white circles, then gather the cards on a book ring. The back guide is mirrored to line up on a double-sided print.</p>
+            <p className="home-card-print-tip">Test one sheet before cutting along the trim marks. The punch guide on the back is mirrored to line up with the front.</p>
           </div>
         </section>
         <footer><span>© jelly coffee lab</span><a href="#top">back to top ↑</a></footer>
