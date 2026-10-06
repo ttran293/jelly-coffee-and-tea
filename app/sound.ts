@@ -111,10 +111,6 @@ function playCardBark(level: number, rate: number, delay = 0) {
   source.onended = () => { source.disconnect(); volume.disconnect(); };
 }
 
-export function playCardHover() {
-  playCardBark(0.65, 1);
-}
-
 export function playCardGrab() {
   playCardBark(0.45, 1);
 }
