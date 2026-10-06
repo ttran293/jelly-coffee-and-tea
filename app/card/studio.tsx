@@ -2,218 +2,171 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import * as THREE from "three";
 import type { ThemeName } from "../theme";
-import { CARD_SIZE, cardDataUrl, cardPalette, cardSvg } from "./artwork";
+import { CARD_SIZE, cardDataUrl, cardPalette } from "./artwork";
+import { CARD_RECIPES, FEATURED_CARD_INDEX } from "./recipes";
 
-function compileShader(gl: WebGLRenderingContext, type: number, source: string) {
-  const shader = gl.createShader(type);
-  if (!shader) throw new Error("Could not create shader");
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    const error = gl.getShaderInfoLog(shader);
-    gl.deleteShader(shader);
-    throw new Error(error || "Could not compile shader");
+const cardWidth = 3;
+const cardHeight = 1.8;
+const halfWidth = cardWidth / 2;
+const halfHeight = cardHeight / 2;
+const holeX = -halfWidth + cardWidth * CARD_SIZE.holeInset / CARD_SIZE.width;
+const holeY = halfHeight - cardHeight * CARD_SIZE.holeInset / CARD_SIZE.height;
+const holeRadius = cardWidth * CARD_SIZE.holeRadius / CARD_SIZE.width;
+
+function cardShape(back = false) {
+  const shape = new THREE.Shape();
+  shape.moveTo(-halfWidth, -halfHeight);
+  shape.lineTo(halfWidth, -halfHeight);
+  shape.lineTo(halfWidth, halfHeight);
+  shape.lineTo(-halfWidth, halfHeight);
+  shape.closePath();
+
+  const hole = new THREE.Path();
+  hole.absarc(back ? -holeX : holeX, holeY, holeRadius, 0, Math.PI * 2, true);
+  shape.holes.push(hole);
+  return shape;
+}
+
+function printedFace(shape: THREE.Shape) {
+  const geometry = new THREE.ShapeGeometry(shape, 32);
+  const positions = geometry.getAttribute("position");
+  const uv = geometry.getAttribute("uv");
+  for (let index = 0; index < positions.count; index++) {
+    uv.setXY(index, (positions.getX(index) + halfWidth) / cardWidth, (positions.getY(index) + halfHeight) / cardHeight);
   }
-  return shader;
+  uv.needsUpdate = true;
+  return geometry;
 }
 
 export function Card3D({ theme }: { theme: ThemeName }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotation = useRef({ x: -0.08, y: -0.28 });
+  const drag = useRef<{ x: number; y: number } | null>(null);
   const [supported, setSupported] = useState(true);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const gl = canvas.getContext("webgl", { antialias: true, alpha: true });
-    if (!gl) { setSupported(false); return; }
 
-    const vertexSource = `
-      attribute vec3 aPosition;
-      attribute vec2 aUv;
-      attribute vec3 aNormal;
-      uniform vec2 uRotation;
-      uniform float uAspect;
-      varying vec2 vUv;
-      varying float vLight;
-      void main() {
-        float cx = cos(uRotation.x), sx = sin(uRotation.x);
-        float cy = cos(uRotation.y), sy = sin(uRotation.y);
-        vec3 p = vec3(aPosition.x * cy + aPosition.z * sy,
-          aPosition.y,
-          -aPosition.x * sy + aPosition.z * cy);
-        p = vec3(p.x, p.y * cx - p.z * sx, p.y * sx + p.z * cx);
-        vec3 n = vec3(aNormal.x * cy + aNormal.z * sy,
-          aNormal.y,
-          -aNormal.x * sy + aNormal.z * cy);
-        n = vec3(n.x, n.y * cx - n.z * sx, n.y * sx + n.z * cx);
-        vUv = aUv;
-        vLight = 0.76 + 0.24 * max(dot(normalize(n), normalize(vec3(-0.35, 0.5, 1.0))), 0.0);
-        // Orthographic projection keeps the artwork square and fits narrow screens.
-        float scale = min(0.78, uAspect * 0.58);
-        gl_Position = vec4(p.x * scale / uAspect, p.y * scale, -p.z * 0.1, 1.0);
-      }
-    `;
-    const fragmentSource = `
-      precision mediump float;
-      uniform sampler2D uTexture;
-      uniform float uTextured;
-      uniform float uHoleX;
-      uniform vec3 uColor;
-      varying vec2 vUv;
-      varying float vLight;
-      void main() {
-        if (uTextured > 0.5) {
-          vec2 hole = vec2((vUv.x - uHoleX) * ${CARD_SIZE.width.toFixed(1)}, (vUv.y - ${(1 - CARD_SIZE.holeInset / CARD_SIZE.height).toFixed(6)}) * ${CARD_SIZE.height.toFixed(1)});
-          if (dot(hole, hole) < ${(CARD_SIZE.holeRadius ** 2).toFixed(6)}) discard;
-        }
-        vec4 color = uTextured > 0.5 ? texture2D(uTexture, vUv) : vec4(uColor, 1.0);
-        gl_FragColor = vec4(color.rgb * vLight, color.a);
-      }
-    `;
-
-    let vertex: WebGLShader | null = null;
-    let fragment: WebGLShader | null = null;
-    let program: WebGLProgram | null = null;
-    let buffer: WebGLBuffer | null = null;
-    let frame = 0;
-    const textures: WebGLTexture[] = [];
-    let alive = true;
-
+    let renderer: THREE.WebGLRenderer;
     try {
-      vertex = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
-      fragment = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
-      program = gl.createProgram();
-      if (!program) throw new Error("Could not create WebGL program");
-      gl.attachShader(program, vertex);
-      gl.attachShader(program, fragment);
-      gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error("Could not link WebGL program");
-      gl.useProgram(program);
-      buffer = gl.createBuffer();
-      if (!buffer) throw new Error("Could not create WebGL buffer");
-      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      const stride = 8 * 4;
-      const attrs = [
-        ["aPosition", 3, 0], ["aUv", 2, 3 * 4], ["aNormal", 3, 5 * 4],
-      ] as const;
-      for (const [name, size, offset] of attrs) {
-        const location = gl.getAttribLocation(program, name);
-        gl.enableVertexAttribArray(location);
-        gl.vertexAttribPointer(location, size, gl.FLOAT, false, stride, offset);
-      }
-      gl.enable(gl.DEPTH_TEST);
-      gl.enable(gl.CULL_FACE);
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
     } catch {
-      setSupported(false);
-      return;
+      const fallbackFrame = requestAnimationFrame(() => setSupported(false));
+      return () => cancelAnimationFrame(fallbackFrame);
     }
 
-    const programRef = program;
-    const bufferRef = buffer;
-    const vertexRef = vertex;
-    const fragmentRef = fragment;
-    const rotationUniform = gl.getUniformLocation(programRef, "uRotation");
-    const aspectUniform = gl.getUniformLocation(programRef, "uAspect");
-    const texturedUniform = gl.getUniformLocation(programRef, "uTextured");
-    const holeXUniform = gl.getUniformLocation(programRef, "uHoleX");
-    const colorUniform = gl.getUniformLocation(programRef, "uColor");
-    const textureUniform = gl.getUniformLocation(programRef, "uTexture");
-    gl.uniform1i(textureUniform, 0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-2, 2, 1.2, -1.2, 0.1, 20);
+    camera.position.z = 6;
+    scene.add(new THREE.AmbientLight(0xffffff, 2));
+    const light = new THREE.DirectionalLight(0xffffff, 2.5);
+    light.position.set(-2, 3, 5);
+    scene.add(light);
+
+    const stack = new THREE.Group();
+    stack.position.y = 0.08;
+    scene.add(stack);
     const palette = cardPalette(theme);
-    const rgb = (hex: string) => [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16));
-    const paper = rgb(palette.paper);
-    const edge = rgb(palette.accent).map((value) => value / 255);
-    const textureUrls: string[] = [];
-    const makeTexture = (svg: string) => {
-      const texture = gl.createTexture();
-      if (!texture) throw new Error("Could not create texture");
+    const loader = new THREE.TextureLoader();
+    const textures: THREE.Texture[] = [];
+    const loadArt = (recipeIndex: number, side: "front" | "back") => {
+      const texture = loader.load(cardDataUrl(theme, CARD_RECIPES[recipeIndex], side, true));
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
       textures.push(texture);
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([...paper, 255]));
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      const image = new window.Image();
-      image.onload = () => {
-        if (!alive) return;
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-      };
-      const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
-      textureUrls.push(url);
-      image.src = url;
       return texture;
     };
-    const frontTexture = makeTexture(cardSvg(theme, "front", true));
-    const backTexture = makeTexture(cardSvg(theme, "back", true));
+    const backTexture = loadArt(0, "back");
+    const frontShape = cardShape();
+    const backShape = cardShape(true);
+    CARD_RECIPES.forEach((_, index) => {
+      const group = new THREE.Group();
+      const rank = (index - FEATURED_CARD_INDEX + CARD_RECIPES.length) % CARD_RECIPES.length;
+      group.position.set(holeX, holeY, 0.08 - rank * 0.06);
+      group.rotation.z = -rank * 0.035;
 
-    const halfDepth = .006;
-    const halfHeight = .9;
-    const face = (z: number, normal: number) => {
-      const vertices = [
-      -1.5, -halfHeight, z, normal > 0 ? 0 : 1, 0, 0, 0, normal,
-       1.5, -halfHeight, z, normal > 0 ? 1 : 0, 0, 0, 0, normal,
-       1.5,  halfHeight, z, normal > 0 ? 1 : 0, 1, 0, 0, normal,
-      -1.5, -halfHeight, z, normal > 0 ? 0 : 1, 0, 0, 0, normal,
-       1.5,  halfHeight, z, normal > 0 ? 1 : 0, 1, 0, 0, normal,
-      -1.5,  halfHeight, z, normal > 0 ? 0 : 1, 1, 0, 0, normal,
-      ];
-      if (normal > 0) return vertices;
-      const vertexAt = (index: number) => vertices.slice(index * 8, index * 8 + 8);
-      return [1, 0, 2, 4, 3, 5].flatMap(vertexAt);
+      const body = new THREE.Mesh(
+        new THREE.ExtrudeGeometry(frontShape, { depth: 0.012, bevelEnabled: false, curveSegments: 32 }),
+        new THREE.MeshStandardMaterial({ color: palette.accent, roughness: 0.9 }),
+      );
+      body.position.set(-holeX, -holeY, -0.006);
+      group.add(body);
+
+      const front = new THREE.Mesh(
+        printedFace(frontShape),
+        new THREE.MeshBasicMaterial({ map: loadArt(index, "front"), side: THREE.FrontSide }),
+      );
+      front.position.set(-holeX, -holeY, 0.007);
+      group.add(front);
+
+      const back = new THREE.Mesh(
+        printedFace(backShape),
+        new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.FrontSide }),
+      );
+      back.rotation.y = Math.PI;
+      back.position.set(-holeX, -holeY, -0.007);
+      group.add(back);
+
+      stack.add(group);
+    });
+
+    // The ring stands perpendicular to the cards and threads through every punch hole.
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.13, 0.014, 12, 64),
+      new THREE.MeshStandardMaterial({ color: 0xc6a878, metalness: 0.72, roughness: 0.28 }),
+    );
+    ring.rotation.y = Math.PI / 2;
+    ring.position.set(holeX, holeY + 0.13, 0.035);
+    stack.add(ring);
+
+    const resize = () => {
+      const width = Math.max(1, canvas.clientWidth);
+      const height = Math.max(1, canvas.clientHeight);
+      const aspect = width / height;
+      const viewHeight = Math.max(2.72, 3.8 / aspect);
+      camera.left = -viewHeight * aspect / 2;
+      camera.right = viewHeight * aspect / 2;
+      camera.top = viewHeight / 2;
+      camera.bottom = -viewHeight / 2;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height, false);
     };
-    const quad = (a: number[], b: number[], c: number[], d: number[], n: number[]) =>
-      [a, b, c, a, c, d].flatMap((point, index) => [...point, index % 3 === 0 ? 0 : 1, index < 3 ? 0 : 1, ...n]);
-    const edges = [
-      quad([-1.5, -halfHeight, halfDepth], [-1.5, halfHeight, halfDepth], [-1.5, halfHeight, -halfDepth], [-1.5, -halfHeight, -halfDepth], [-1, 0, 0]),
-      quad([1.5, -halfHeight, -halfDepth], [1.5, halfHeight, -halfDepth], [1.5, halfHeight, halfDepth], [1.5, -halfHeight, halfDepth], [1, 0, 0]),
-      quad([-1.5, halfHeight, halfDepth], [1.5, halfHeight, halfDepth], [1.5, halfHeight, -halfDepth], [-1.5, halfHeight, -halfDepth], [0, 1, 0]),
-      quad([-1.5, -halfHeight, -halfDepth], [1.5, -halfHeight, -halfDepth], [1.5, -halfHeight, halfDepth], [-1.5, -halfHeight, halfDepth], [0, -1, 0]),
-    ];
-    const draw = (vertices: number[], texture?: WebGLTexture, holeX = 0) => {
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-      gl.uniform1f(texturedUniform, texture ? 1 : 0);
-      gl.uniform1f(holeXUniform, holeX);
-      if (texture) gl.bindTexture(gl.TEXTURE_2D, texture);
-      else gl.uniform3f(colorUniform, edge[0], edge[1], edge[2]);
-      gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 8);
-    };
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    resize();
+
+    let frame = 0;
     const render = () => {
-      if (!alive) return;
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      const width = Math.round(canvas.clientWidth * ratio);
-      const height = Math.round(canvas.clientHeight * ratio);
-      if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.uniform2f(rotationUniform, rotation.current.x, rotation.current.y);
-      gl.uniform1f(aspectUniform, canvas.width / canvas.height);
-      draw(face(halfDepth, 1), frontTexture, CARD_SIZE.holeInset / CARD_SIZE.width);
-      draw(face(-halfDepth, -1), backTexture, 1 - CARD_SIZE.holeInset / CARD_SIZE.width);
-      for (const edge of edges) draw(edge);
+      stack.rotation.x += (rotation.current.x - stack.rotation.x) * 0.14;
+      stack.rotation.y += (rotation.current.y - stack.rotation.y) * 0.14;
+      renderer.render(scene, camera);
       frame = requestAnimationFrame(render);
     };
     render();
+
     return () => {
-      alive = false;
       cancelAnimationFrame(frame);
-      textures.forEach((texture) => gl.deleteTexture(texture));
-      textureUrls.forEach((url) => URL.revokeObjectURL(url));
-      gl.deleteBuffer(bufferRef);
-      gl.deleteProgram(programRef);
-      gl.deleteShader(vertexRef);
-      gl.deleteShader(fragmentRef);
+      observer.disconnect();
+      scene.traverse((object) => {
+        if (!(object instanceof THREE.Mesh)) return;
+        object.geometry.dispose();
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        materials.forEach((material) => material.dispose());
+      });
+      textures.forEach((texture) => texture.dispose());
+      renderer.dispose();
     };
   }, [theme]);
 
-  const drag = useRef<{ x: number; y: number } | null>(null);
   return <div className="card-3d-wrap">
-    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label="Interactive WebGL preview of the Jelly Coffee Lab card" onPointerDown={(event) => { drag.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (!drag.current) return; rotation.current.y += (event.clientX - drag.current.x) * .009; rotation.current.x += (event.clientY - drag.current.y) * .006; drag.current = { x: event.clientX, y: event.clientY }; }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Jelly Coffee Lab card front" />}
-    <div className="card-3d-actions"><div className="card-3d-buttons"><button type="button" onClick={() => { rotation.current.y += Math.PI; }}>flip card ↻</button><button type="button" onClick={() => { rotation.current = { x: -.08, y: -.28 }; }}>reset view</button></div><span>drag to rotate 360°</span></div>
+    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label={`Interactive Three.js book ring with ${CARD_RECIPES.length} recipe cards; ${CARD_RECIPES[FEATURED_CARD_INDEX].title} on top`} onPointerDown={(event) => { drag.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (!drag.current) return; rotation.current.y += (event.clientX - drag.current.x) * 0.009; rotation.current.x += (event.clientY - drag.current.y) * 0.006; drag.current = { x: event.clientX, y: event.clientY }; }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, CARD_RECIPES[FEATURED_CARD_INDEX], "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`${CARD_RECIPES[FEATURED_CARD_INDEX].title} recipe card`} />}
+    <div className="card-3d-actions"><div className="card-3d-buttons"><button type="button" onClick={() => { rotation.current.y += Math.PI; }}>flip stack ↻</button><button type="button" onClick={() => { rotation.current = { x: -0.08, y: -0.28 }; }}>reset view</button></div><span>drag to rotate 360°</span></div>
   </div>;
 }

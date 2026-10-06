@@ -1,4 +1,5 @@
 import type { ThemeName } from "../theme";
+import type { CardRecipe } from "./recipes";
 
 type CardSide = "front" | "back";
 
@@ -16,7 +17,9 @@ export function cardPalette(theme: ThemeName) {
   return palettes[theme];
 }
 
-export function cardSvg(theme: ThemeName, side: CardSide, texture = false) {
+const xml = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+
+export function cardSvg(theme: ThemeName, recipe: CardRecipe, side: CardSide, texture = false) {
   const color = palettes[theme];
   const size = texture ? 'width="1680" height="1008"' : 'width="5in" height="3in"';
   // Mirroring the mark on the reverse keeps one physical punch aligned on a duplex print.
@@ -37,39 +40,34 @@ export function cardSvg(theme: ThemeName, side: CardSide, texture = false) {
 </svg>`;
   }
 
+  const ingredients = recipe.ingredients.map((item, index) => `<text x="72" y="${294 + index * 42}">${xml(item)}</text>`).join("\n    ");
+  const steps = recipe.steps.map((lines, index) => {
+    const y = 294 + index * 67;
+    return `<text x="533" y="${y}" fill="${color.accent}" font-weight="700">${String(index + 1).padStart(2, "0")}</text>
+    ${lines.map((line, lineIndex) => `<text x="589" y="${y + lineIndex * 29}">${xml(line)}</text>`).join("\n    ")}`;
+  }).join("\n    ");
+
   return `${start}
-  <text x="101" y="72" fill="${color.accent}" font-family="Courier New, monospace" font-size="24" letter-spacing="4">RECIPE CARD / 02</text>
+  <text x="101" y="72" fill="${color.accent}" font-family="Courier New, monospace" font-size="24" letter-spacing="4">RECIPE CARD / ${recipe.number}</text>
   <text x="770" y="104" transform="rotate(-4 882 85)" fill="${color.accent}" font-family="Segoe UI Symbol, IBM Plex Mono, monospace" font-size="72" font-weight="500" letter-spacing="-8">U・ᴥ・U</text>
-  <text x="69" y="170" fill="${color.ink}" font-family="Arial, Helvetica, sans-serif" font-size="60" font-weight="700" letter-spacing="-2">Honey oat espresso</text>
-  <text x="784" y="171" fill="${color.accent}" font-family="Courier New, monospace" font-size="22">5 MIN · 1 GLASS</text>
+  <text x="69" y="170" fill="${color.ink}" font-family="Arial, Helvetica, sans-serif" font-size="57" font-weight="700" letter-spacing="-2">${xml(recipe.title)}</text>
+  <text x="777" y="171" fill="${color.accent}" font-family="Courier New, monospace" font-size="22">${xml(recipe.meta)}</text>
   <path d="M70 197h910" stroke="${color.line}" stroke-width="2"/>
   <path d="M500 226v298" stroke="${color.line}" stroke-width="2" stroke-dasharray="5 8"/>
 
   <text x="72" y="245" fill="${color.accent}" font-family="Courier New, monospace" font-size="23" letter-spacing="3">WHAT YOU NEED</text>
-  <g fill="${color.ink}" font-family="Arial, Helvetica, sans-serif" font-size="32">
-    <text x="72" y="297">1 double espresso (~36 g)</text>
-    <text x="72" y="345">12 g honey</text>
-    <text x="72" y="393">150 ml chilled oat milk</text>
-    <text x="72" y="441">A tiny pinch of flaky salt</text>
-    <text x="72" y="489">Ice</text>
+  <g fill="${color.ink}" font-family="Arial, Helvetica, sans-serif" font-size="30">
+    ${ingredients}
   </g>
 
   <text x="533" y="245" fill="${color.accent}" font-family="Courier New, monospace" font-size="23" letter-spacing="3">MAKE IT</text>
-  <g font-family="Arial, Helvetica, sans-serif" font-size="29" fill="${color.ink}">
-    <text x="533" y="295" fill="${color.accent}" font-weight="700">01</text>
-    <text x="589" y="295">Stir honey + salt into</text>
-    <text x="589" y="329">hot espresso until dissolved.</text>
-    <text x="533" y="385" fill="${color.accent}" font-weight="700">02</text>
-    <text x="589" y="385">Ice + oat milk in a</text>
-    <text x="589" y="419">short glass.</text>
-    <text x="533" y="475" fill="${color.accent}" font-weight="700">03</text>
-    <text x="589" y="475">Pour espresso over milk;</text>
-    <text x="589" y="509">give one gentle stir.</text>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="26" fill="${color.ink}">
+    ${steps}
   </g>
-  <text x="72" y="548" fill="${color.accent}" font-family="Courier New, monospace" font-size="22">LAB NOTE: DON'T FORGET THE SALT.</text>
+  <text x="72" y="570" fill="${color.accent}" font-family="Courier New, monospace" font-size="22">LAB NOTE: ${xml(recipe.note)}</text>
 </svg>`;
 }
 
-export function cardDataUrl(theme: ThemeName, side: CardSide) {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(cardSvg(theme, side))}`;
+export function cardDataUrl(theme: ThemeName, recipe: CardRecipe, side: CardSide, texture = false) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(cardSvg(theme, recipe, side, texture))}`;
 }
