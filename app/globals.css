@@ -134,6 +134,12 @@ h1 { font: 400 clamp(64px, 7.2vw, 102px)/.85 "Handjet", monospace; letter-spacin
 .recipe-section { margin-top: 112px; padding-top: 25px; border-top: 1px solid var(--line); scroll-margin-top: 25px; }
 .section-heading h2 { font: 400 clamp(48px, 5.4vw, 70px)/.95 "Handjet", monospace; margin: 12px 0 8px; }
 .section-heading p { color: var(--soft-ink); font-size: 15px; margin-bottom: 28px; }
+.testing-line { position: relative; width: fit-content; }
+.testing-line span { cursor: help; text-decoration: underline dotted; text-underline-offset: 4px; }
+.testing-line span:hover, .testing-line span:focus-visible { color: var(--accent-ink); }
+.testing-line span:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
+.testing-line::after { content: ""; position: absolute; z-index: 5; left: calc(100% + 14px); bottom: -32px; width: 200px; height: 150px; border: 1px solid var(--line); background: var(--panel) center / cover no-repeat; opacity: 0; pointer-events: none; }
+.testing-line:hover::after, .testing-line:focus-within::after { opacity: 1; background-image: url("https://media.giphy.com/media/l1AsBL4S36yDJain6/giphy.gif"); }
 .list-header { min-height: 38px; display: flex; justify-content: space-between; align-items: center; gap: 16px; border-bottom: 1px solid var(--line); color: var(--accent-ink); font-size: 13px; }
 .filters { display: flex; flex-wrap: wrap; gap: 14px; }
 .filters button { border: 0; background: none; color: var(--muted-ink); padding: 7px 0; font: inherit; text-transform: lowercase; }
@@ -204,6 +210,7 @@ footer a:hover { color: var(--accent-ink); }
   .visit-count { width: fit-content; min-width: 165px; margin-top: 20px; }
   .sidebar-bottom { display: none; }
   .main-content { padding-top: 25px; }
+  .testing-line::after { left: 0; bottom: calc(100% + 8px); width: min(200px, 70vw); }
   .about-first { margin-top: 27px; }
   .recipe-section { margin-top: 75px; }
   footer { margin-top: 75px; }

@@ -32,7 +32,7 @@ const themes: { id: ThemeName; label: string; colors: string[] }[] = [
   { id: "garden", label: "Garden Glow", colors: ["#fedfcb", "#fff3e9", "#106816", "#fcc2eb"] },
 ];
 
-const visibleThemes = themes.filter((option) => option.id === "blush" || option.id === "spring" || option.id === "garden");
+const visibleThemes = themes.filter((option) => option.id === "blush" || option.id === "spring");
 const gradientThemes = new Set<ThemeName>(["cloud", "blush", "spring", "nightfall", "peach", "tidal", "garden"]);
 
 function applyTheme(choice: ThemeName) {
@@ -214,10 +214,10 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
 
       <main className="main-content">
         <div className="path">~/jelly/index.txt</div>
-        <section id="about" className="about about-first" aria-label="About this page"><span className="section-label">ABOUT.TXT</span><h1>little drink log<span className="cursor">_</span></h1><p>We kept forgetting the good ratios. This is our little place to keep them.</p><div className="about-ascii" aria-hidden="true">{`[ coffee ] + [ tea ] = ♡`}</div></section>
+        <section id="about" className="about about-first" aria-label="About this page"><span className="section-label">ABOUT.TXT</span><h1>recipe log<span className="cursor">_</span></h1><p>We kept forgetting the good ratios. This is our little place to keep them.</p><div className="about-ascii" aria-hidden="true">{`[ coffee ] + [ tea ] = ♡`}</div></section>
 
         <section id="drinks" className="recipe-section drink-list" aria-labelledby="drinks-title">
-          <div className="section-heading"><span className="section-label">DRINKS.TXT</span><h2 id="drinks-title">drinks</h2><p>We keep changing these. Writing down the versions that worked.</p></div>
+          <div className="section-heading"><span className="section-label">DRINKS.TXT</span><h2 id="drinks-title">drinks</h2><p className="testing-line"><span tabIndex={0}>What we are testing.</span></p></div>
           <div className="list-header"><span>FILE NAME</span><div className="filters" role="group" aria-label="Filter drinks">{(["All", "Tea", "Coffee"] as const).map((item) => <button type="button" key={item} onClick={() => { setFilter(item); setSelected(null); }} aria-pressed={filter === item}>{item.toLowerCase()}</button>)}</div></div>
           {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} />)}
           <p className="list-note">* recipes change when we make something better</p>
@@ -229,7 +229,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
           {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} />)}
         </section>
         <section id="card" className="recipe-section home-card" aria-labelledby="card-title">
-          <div className="section-heading"><span className="section-label">CARD.TXT</span><h2 id="card-title">the little card</h2><p>A ring-bound recipe card, shown with our go-to basic matcha latte.</p></div>
+          <div className="section-heading"><span className="section-label">CARD.TXT</span><h2 id="card-title">the little card</h2><p>Print it, punch it, save for later.</p></div>
           <Card3D theme={theme} onPaper={() => { if (soundEnabled) playPaper(); }} />
           <div className="home-card-print">
             <h3>flat &amp; ready to print</h3>
