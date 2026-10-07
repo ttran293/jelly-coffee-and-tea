@@ -231,7 +231,6 @@ footer a:hover { color: var(--accent-ink); }
 @media (max-width: 520px) {
   .site-shell { padding-left: 18px; padding-right: 18px; }
   h1 { font-size: clamp(58px, 16vw, 78px); }
-  .theme-name { display: none; }
   .theme-option { padding: 5px 8px; }
   .theme-swatch { width: 32px; height: 24px; }
   .drink-row { gap: 8px; }

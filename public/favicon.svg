@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="5" fill="#dceafd" stroke="#729fd8" stroke-width="4"/><text x="30" y="48" text-anchor="middle" fill="#192b47" font-family="cursive" font-size="52" font-weight="bold">j</text><circle cx="48" cy="46" r="5" fill="#ff8e47"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Jelly Coffee Lab paw print">
+  <rect width="64" height="64" rx="13" fill="#dceafd"/>
+  <g fill="#925676">
+    <ellipse cx="16" cy="26" rx="5" ry="7" transform="rotate(-23 16 26)"/>
+    <ellipse cx="27" cy="19" rx="5" ry="7" transform="rotate(-8 27 19)"/>
+    <ellipse cx="39" cy="19" rx="5" ry="7" transform="rotate(8 39 19)"/>
+    <ellipse cx="50" cy="26" rx="5" ry="7" transform="rotate(23 50 26)"/>
+    <path d="M32 31c-5 0-8 4-11 7-3 3-7 5-7 10 0 5 4 8 9 8 4 0 6-2 9-2s5 2 9 2c5 0 9-3 9-8 0-5-4-7-7-10-3-3-6-7-11-7Z"/>
+  </g>
+</svg>

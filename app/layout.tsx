@@ -7,7 +7,7 @@ import "./card/card.css";
 export const metadata: Metadata = {
   title: "Jelly Coffee Lab | Open coffee & tea recipes",
   description: "Coffee and tea recipes we're working on.",
-  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+  icons: { icon: "/favicon.svg?v=3", shortcut: "/favicon.svg?v=3" },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

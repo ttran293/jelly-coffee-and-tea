@@ -163,17 +163,26 @@ export function HeroCup() {
 
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0;
-    let last = 0;
+    let start = 0;
     const tick = (time: number) => {
-      if (last) cup.rotation.y += Math.min((time - last) / 1000, 0.05) * 0.36;
-      last = time;
+      if (!start) start = time;
+      const phase = (time - start) * Math.PI * 2 / 5200;
+      cup.position.x = Math.sin(phase + 0.8) * 0.055;
+      cup.position.y = Math.sin(phase) * 0.09;
+      cup.rotation.y = -0.3 + Math.sin(phase + 0.4) * 0.07;
+      cup.rotation.z = Math.sin(phase + 1.1) * 0.028;
       renderer.render(scene, camera);
       frame = requestAnimationFrame(tick);
     };
     const syncMotion = () => {
       cancelAnimationFrame(frame);
-      last = 0;
-      if (motion.matches) renderer.render(scene, camera);
+      start = 0;
+      if (motion.matches) {
+        cup.position.set(0, 0, 0);
+        cup.rotation.y = -0.3;
+        cup.rotation.z = 0;
+        renderer.render(scene, camera);
+      }
       else frame = requestAnimationFrame(tick);
     };
     motion.addEventListener("change", syncMotion);
@@ -195,5 +204,5 @@ export function HeroCup() {
     };
   }, []);
 
-  return <figure className="hero-cup" role="img" aria-label="A rotating low-poly matcha latte in a transparent plastic cup with visible ice"><canvas ref={canvasRef} aria-hidden="true" /></figure>;
+  return <figure className="hero-cup" role="img" aria-label="A floating low-poly matcha latte in a transparent plastic cup with visible ice"><canvas ref={canvasRef} aria-hidden="true" /></figure>;
 }

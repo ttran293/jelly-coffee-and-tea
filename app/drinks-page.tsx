@@ -55,20 +55,20 @@ type Recipe = {
 };
 
 const themes: { id: ThemeName; label: string; colors: string[] }[] = [
+  { id: "spring", label: "Spring Mist", colors: ["#ffffff", "#263b5c", "#e0ffc9", "#cbd7fe"] },
+  { id: "blush", label: "Blush Sky", colors: ["#ffffff", "#263b5c", "#c9e0ff", "#fecbcc"] },
   { id: "butter", label: "Butter Paper", colors: ["#f4ebcf", "#292c3e", "#ae3854", "#2c7091"] },
   { id: "blueberry", label: "Blueberry", colors: ["#232841", "#fbf3e5", "#a8d9f0", "#f3ae91"] },
   { id: "cherry", label: "Cherry Cola", colors: ["#40252e", "#fff1df", "#ffb49d", "#f2d17c"] },
   { id: "lilac", label: "Lilac Screen", colors: ["#dedaf0", "#302d4a", "#6852af", "#b65475"] },
   { id: "cloud", label: "Cloud Wash", colors: ["#ffffff", "#263b5c", "#fff2c9", "#cbd7ef"] },
-  { id: "blush", label: "Blush Sky", colors: ["#ffffff", "#263b5c", "#c9e0ff", "#fecbcc"] },
-  { id: "spring", label: "Spring Mist", colors: ["#ffffff", "#263b5c", "#e0ffc9", "#cbd7fe"] },
   { id: "nightfall", label: "Nightfall", colors: ["#ffcee3", "#fff4f8", "#678ec9", "#262277"] },
   { id: "peach", label: "Peach Dusk", colors: ["#ffe28d", "#fff3e0", "#fac1a8", "#13193d"] },
   { id: "tidal", label: "Tidal", colors: ["#f9d2e4", "#f7fff9", "#67c9b5", "#007e79"] },
   { id: "garden", label: "Garden Glow", colors: ["#fedfcb", "#fff3e9", "#106816", "#fcc2eb"] },
 ];
 
-const visibleThemes = themes.filter((option) => option.id === "blush" || option.id === "spring");
+const visibleThemes = themes.filter((option) => option.id === "spring" || option.id === "butter" || option.id === "blueberry");
 const gradientThemes = new Set<ThemeName>(["cloud", "blush", "spring", "nightfall", "peach", "tidal", "garden"]);
 
 function applyTheme(choice: ThemeName) {
