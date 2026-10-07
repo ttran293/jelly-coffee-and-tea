@@ -8,6 +8,8 @@ import { CARD_SIZE, cardDataUrl, cardPalette } from "./artwork";
 import { CARD_RECIPES, FEATURED_CARD_INDEX } from "./recipes";
 import { playCardFlip, playCardGrab, preloadBark } from "../sound";
 
+// The decorative stack stays at three cards, independent of the print selection.
+const STUDIO_RECIPES = CARD_RECIPES.slice(0, 3);
 const cardWidth = 3;
 const cardHeight = 1.8;
 const halfWidth = cardWidth / 2;
@@ -80,7 +82,7 @@ export function Card3D({ theme }: { theme: ThemeName }) {
     const loader = new THREE.TextureLoader();
     const textures: THREE.Texture[] = [];
     const loadArt = (recipeIndex: number, side: "front" | "back") => {
-      const texture = loader.load(cardDataUrl(theme, CARD_RECIPES[recipeIndex], side, true));
+      const texture = loader.load(cardDataUrl(theme, STUDIO_RECIPES[recipeIndex], side, true));
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
       textures.push(texture);
@@ -90,9 +92,9 @@ export function Card3D({ theme }: { theme: ThemeName }) {
     const frontShape = cardShape();
     const backShape = cardShape(true);
     const cardMeshes: THREE.Mesh[] = [];
-    CARD_RECIPES.forEach((_, index) => {
+    STUDIO_RECIPES.forEach((_, index) => {
       const group = new THREE.Group();
-      const rank = (index - FEATURED_CARD_INDEX + CARD_RECIPES.length) % CARD_RECIPES.length;
+      const rank = (index - FEATURED_CARD_INDEX + STUDIO_RECIPES.length) % STUDIO_RECIPES.length;
       group.position.set(holeX, holeY, 0.08 - rank * 0.06);
       group.rotation.z = -rank * 0.035;
 
@@ -183,12 +185,12 @@ export function Card3D({ theme }: { theme: ThemeName }) {
   }, [theme]);
 
   return <div className="card-3d-wrap">
-    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label={`Interactive Three.js book ring with ${CARD_RECIPES.length} recipe cards; ${CARD_RECIPES[FEATURED_CARD_INDEX].title} on top`} onPointerDown={(event) => { const sounding = hitCard.current(event.clientX, event.clientY); drag.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); if (sounding) playCardGrab(); }} onPointerMove={(event) => {
+    {supported ? <canvas ref={canvasRef} className="card-3d-canvas" aria-label={`Interactive Three.js book ring with ${STUDIO_RECIPES.length} recipe cards; ${STUDIO_RECIPES[FEATURED_CARD_INDEX].title} on top`} onPointerDown={(event) => { const sounding = hitCard.current(event.clientX, event.clientY); drag.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); if (sounding) playCardGrab(); }} onPointerMove={(event) => {
       if (!drag.current) return;
       rotation.current.y += (event.clientX - drag.current.x) * 0.009;
       rotation.current.x += (event.clientY - drag.current.y) * 0.006;
       drag.current = { x: event.clientX, y: event.clientY };
-    }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, CARD_RECIPES[FEATURED_CARD_INDEX], "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`${CARD_RECIPES[FEATURED_CARD_INDEX].title} recipe card`} />}
+    }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} /> : <Image className="card-3d-fallback" src={cardDataUrl(theme, STUDIO_RECIPES[FEATURED_CARD_INDEX], "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`${STUDIO_RECIPES[FEATURED_CARD_INDEX].title} recipe card`} />}
     <div className="card-3d-actions"><div className="card-3d-buttons"><button type="button" onClick={() => { rotation.current.y += Math.PI; playCardFlip(); }}>flip stack ↻</button><button type="button" onClick={() => { rotation.current = { x: -0.08, y: -0.28 }; playCardGrab(); }}>reset view</button></div><span>drag to rotate 360°</span></div>
   </div>;
 }

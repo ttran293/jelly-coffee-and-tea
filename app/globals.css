@@ -118,7 +118,7 @@ html[data-theme="tidal"] .main-content { --ink: #004d55; --soft-ink: #245b61; --
 .theme-name { white-space: nowrap; }
 .sound-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 21px; }
 .sound-setting .sidebar-label { margin-bottom: 0; }
-.sound-toggle { flex: 0 0 auto; min-width: 48px; padding: 3px 5px; border: 1px solid var(--line); background: var(--panel); color: var(--accent-ink); font: 11px/1.2 "IBM Plex Mono", monospace; text-align: center; }
+.sound-toggle { flex: 0 0 auto; min-width: 64px; min-height: 32px; padding: 6px 9px; border: 1px solid var(--line); background: var(--panel); color: var(--accent-ink); font: 12px/1.2 "IBM Plex Mono", monospace; text-align: center; }
 .sound-toggle:hover { border-color: var(--accent-ink); }
 .sound-toggle[aria-pressed="false"] { color: var(--muted-ink); background: transparent; }
 .sound-toggle:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
@@ -212,6 +212,9 @@ footer a:hover { color: var(--accent-ink); }
   .theme-picker { margin-top: 24px; }
   .theme-options { display: flex; flex-wrap: wrap; gap: 6px; }
   .theme-option { width: auto; min-height: 41px; padding: 4px 7px; }
+  .sound-setting { justify-content: flex-start; gap: 18px; }
+  .sound-setting .sidebar-label { width: 90px; flex: 0 0 auto; }
+  .sound-toggle { min-width: 92px; min-height: 44px; padding: 10px 14px; font-size: 13px; }
   .visit-count { width: fit-content; min-width: 165px; margin-top: 20px; }
   .sidebar-bottom { display: none; }
   .main-content { padding-top: 25px; }

@@ -30,12 +30,18 @@ function CardPngDownload({ theme, side }: { theme: ThemeName; side: "front" | "b
   return <a href={url || undefined} download={`jelly-coffee-lab-${theme}-${featuredCard.id}-${side}.png`} aria-disabled={!url}>{url ? "download PNG ↓" : failed ? "PNG unavailable" : "preparing PNG…"}</a>;
 }
 
-function CardSheetDownload({ theme }: { theme: ThemeName }) {
-  return <div className="card-sheet-download">
-    <p>One PDF, both sides: fronts on page 1 and aligned backs on page 2.</p>
+function CardSheetDownload({ theme, selectedIds, onToggle, onClear }: { theme: ThemeName; selectedIds: string[]; onToggle: (id: string) => void; onClear: () => void }) {
+  const selection = `theme=${theme}&recipes=${selectedIds.join(",")}`;
+  return <div id="print-selection" className="card-sheet-download">
+    <p>Add recipes as you browse, then download the cards here. Each front is followed by its aligned back for double-sided printing.</p>
+    <div className="card-sheet-review" aria-live="polite">
+      <div className="card-sheet-review-head"><span>SELECTED / {String(selectedIds.length).padStart(2, "0")}</span>{selectedIds.length > 0 && <button type="button" onClick={onClear}>clear all</button>}</div>
+      {selectedIds.length === 0 ? <p>No recipes selected yet. Open a recipe and choose “add to print”.</p> : <ol>{selectedIds.map((id) => { const recipe = CARD_RECIPES.find((card) => card.id === id); return recipe && <li key={id}><span>{recipe.title}</span><button type="button" onClick={() => onToggle(id)} aria-label={`Remove ${recipe.title} from print selection`}>remove ×</button></li>; })}</ol>}
+    </div>
+    {selectedIds.length > 0 && <p className="card-sheet-count">{selectedIds.length} {selectedIds.length === 1 ? "recipe" : "recipes"} · {Math.ceil(selectedIds.length / 10)} business {selectedIds.length <= 10 ? "sheet" : "sheets"} or {Math.ceil(selectedIds.length / 3)} larger {selectedIds.length <= 3 ? "sheet" : "sheets"}</p>}
     <div className="card-sheet-buttons">
-      <a href={`/api/card-sheet?size=business&theme=${theme}`} download>download business card sheet ↓<small>3.5 × 2 in · 10 per Letter sheet</small></a>
-      <a href={`/api/card-sheet?size=recipe&theme=${theme}`} download>download larger recipe sheet ↓<small>5 × 3 in · 3 per Letter sheet</small></a>
+      <a href={selectedIds.length ? `/api/card-sheet?size=business&${selection}` : undefined} aria-disabled={!selectedIds.length} download>download business card sheet ↓<small>3.5 × 2 in · up to 10 per Letter sheet</small></a>
+      <a href={selectedIds.length ? `/api/card-sheet?size=recipe&${selection}` : undefined} aria-disabled={!selectedIds.length} download>download larger recipe sheet ↓<small>5 × 3 in · up to 3 per Letter sheet</small></a>
     </div>
   </div>;
 }
@@ -185,7 +191,7 @@ const toppings: Recipe[] = [
 
 let visitRequest: Promise<number | null> | null = null;
 
-function RecipeEntry({ recipe, isOpen, onSelect }: { recipe: Recipe; isOpen: boolean; onSelect: (recipe: Recipe | null) => void }) {
+function RecipeEntry({ recipe, isOpen, onSelect, isPicked, onTogglePrint }: { recipe: Recipe; isOpen: boolean; onSelect: (recipe: Recipe | null) => void; isPicked?: boolean; onTogglePrint?: (id: string) => void }) {
   return <div className="drink-entry">
     <button id={`drink-${recipe.id}`} type="button" className="drink-row" onClick={() => onSelect(isOpen ? null : recipe)} aria-expanded={isOpen} aria-controls={`recipe-${recipe.id}`} aria-label={`${isOpen ? "Hide" : "Read"} ${recipe.name} recipe`}>
       <span className="drink-number">{recipe.number} /</span><span className="drink-info"><strong>{recipe.name}</strong><small>{recipe.description}</small></span><span className="drink-kind">{(recipe.typeLabel ?? recipe.kind).toUpperCase()}</span><span className="row-arrow" aria-hidden="true">{isOpen ? "−" : "+"}</span>
@@ -197,6 +203,7 @@ function RecipeEntry({ recipe, isOpen, onSelect }: { recipe: Recipe; isOpen: boo
       {recipe.note && <p className="lab-note"><strong>Note:</strong> {recipe.note}</p>}
       {recipe.variations && <div className="lab-note"><strong>Notes / variations</strong><ul>{recipe.variations.map((item) => <li key={item}>{item}</li>)}</ul></div>}
       {recipe.sample && <p className="sample-label">[ sample recipe / version 01 ]</p>}
+      {onTogglePrint && <div className="recipe-print-action"><button type="button" aria-pressed={isPicked} onClick={() => onTogglePrint(recipe.id)}>{isPicked ? "✓ added to print · remove" : "+ add this recipe to print"}</button>{isPicked && <a href="#print-selection">view print selection ↓</a>}</div>}
     </article>}
   </div>;
 }
@@ -205,10 +212,15 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
   const [theme, setTheme] = useState<ThemeName>(initialTheme);
   const [filter, setFilter] = useState<"All" | "Tea" | "Coffee">("All");
   const [selected, setSelected] = useState<Recipe | null>(null);
+  const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
   const [visitCount, setVisitCount] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState<"about" | "drinks" | "toppings" | "card">("about");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const visibleDrinks = drinks.filter((drink) => filter === "All" || drink.kind === filter);
+
+  function togglePrintRecipe(id: string) {
+    setSelectedCardIds((current) => current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id]);
+  }
 
   useEffect(() => {
     const updateSection = () => {
@@ -277,7 +289,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
     }}>
       <aside className="sidebar">
         <div className="identity"><div className="dog-kaomoji" aria-hidden="true"><span>U・ᴥ・U</span><small>~ woof ~</small></div><a href="#top" className="site-name">jelly coffee lab</a></div>
-        <nav className="sidebar-nav" aria-label="Main navigation"><a href="#about" className={activeSection === "about" ? "current" : undefined} aria-current={activeSection === "about" ? "location" : undefined}>{activeSection === "about" ? "> " : ""}about</a><a href="#drinks" className={activeSection === "drinks" ? "current" : undefined} aria-current={activeSection === "drinks" ? "location" : undefined}>{activeSection === "drinks" ? "> " : ""}drinks</a><a href="#toppings" className={activeSection === "toppings" ? "current" : undefined} aria-current={activeSection === "toppings" ? "location" : undefined}>{activeSection === "toppings" ? "> " : ""}toppings</a><a href="#card" className={activeSection === "card" ? "current" : undefined} aria-current={activeSection === "card" ? "location" : undefined}>{activeSection === "card" ? "> " : ""}card</a></nav>
+        <nav className="sidebar-nav" aria-label="Main navigation"><a href="#about" className={activeSection === "about" ? "current" : undefined} aria-current={activeSection === "about" ? "location" : undefined}>{activeSection === "about" ? "> " : ""}about</a><a href="#drinks" className={activeSection === "drinks" ? "current" : undefined} aria-current={activeSection === "drinks" ? "location" : undefined}>{activeSection === "drinks" ? "> " : ""}drinks</a><a href="#toppings" className={activeSection === "toppings" ? "current" : undefined} aria-current={activeSection === "toppings" ? "location" : undefined}>{activeSection === "toppings" ? "> " : ""}toppings</a><a href={selectedCardIds.length > 0 ? "#print-selection" : "#card"} className={activeSection === "card" ? "current" : undefined} aria-current={activeSection === "card" ? "location" : undefined}>{activeSection === "card" ? "> " : ""}card{selectedCardIds.length > 0 && <span className="nav-card-count"> ({selectedCardIds.length})</span>}</a></nav>
         <div className="theme-picker">
           <div className="sidebar-label">THEME / <span>{themes.find((option) => option.id === theme)?.label}</span></div>
           <div className="theme-options" role="group" aria-label="Color theme">{visibleThemes.map((option) => <button key={option.id} type="button" className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.label} theme`} aria-pressed={theme === option.id} title={option.label}>
@@ -296,21 +308,21 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
         <section id="drinks" className="recipe-section drink-list" aria-labelledby="drinks-title">
           <div className="section-heading"><span className="section-label">DRINKS.TXT</span><h2 id="drinks-title">drinks</h2><p className="testing-line"><span tabIndex={0}>What we are testing.</span></p></div>
           <div className="list-header"><span>FILE NAME</span><div className="filters" role="group" aria-label="Filter drinks">{(["All", "Tea", "Coffee"] as const).map((item) => <button type="button" key={item} onClick={() => { setFilter(item); setSelected(null); }} aria-pressed={filter === item}>{item.toLowerCase()}</button>)}</div></div>
-          {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} />)}
+          {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} isPicked={selectedCardIds.includes(drink.id)} onTogglePrint={togglePrintRecipe} />)}
           <p className="list-note">* recipes change when we make something better</p>
         </section>
 
         <section id="toppings" className="recipe-section topping-list" aria-labelledby="toppings-title">
           <div className="section-heading"><span className="section-label">TOPPINGS.TXT</span><h2 id="toppings-title">toppings</h2><p>The bits we put on top.</p></div>
           <div className="list-header"><span>FILE NAME</span><span>{toppings.length} {toppings.length === 1 ? "FILE" : "FILES"}</span></div>
-          {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} />)}
+          {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} isPicked={selectedCardIds.includes(topping.id)} onTogglePrint={togglePrintRecipe} />)}
         </section>
         <section id="card" className="recipe-section home-card" aria-labelledby="card-title">
           <div className="section-heading"><span className="section-label">CARD.TXT</span><h2 id="card-title">the little card</h2><p>Print it, punch it, save for later.</p></div>
           <Card3D theme={theme} />
           <div className="home-card-print">
             <h3>print the card</h3>
-            <CardSheetDownload theme={theme} />
+            <CardSheetDownload theme={theme} selectedIds={selectedCardIds} onToggle={togglePrintRecipe} onClear={() => setSelectedCardIds([])} />
             <div className="card-print-settings">
               <h4>print settings / PDF</h4>
               <ul>
