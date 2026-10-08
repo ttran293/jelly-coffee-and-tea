@@ -34,7 +34,11 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 .card-sheet-review ol { margin: 0; padding: 0; list-style: none; }
 .card-sheet-review li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; color: var(--ink); font-size: 12px; }
 .card-sheet-review li + li { border-top: 1px solid var(--line); }
+.card-sheet-recipe-name { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.card-sheet-recipe-name strong { display: inline-block; min-width: 29px; padding: 3px 6px; background: var(--accent-ink); color: var(--page); font-size: 13px; font-weight: 700; line-height: 1.2; text-align: center; white-space: nowrap; }
 .card-sheet-review li button { flex: none; font-size: 11px; }
+.card-sheet-review-actions { display: flex; flex: none; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.card-sheet-review button:disabled { opacity: .45; cursor: not-allowed; text-decoration: none; }
 .card-sheet-download .card-sheet-count { margin-bottom: 12px; color: var(--ink); }
 .card-sheet-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .card-sheet-buttons a { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 13px 15px; border: 1px solid var(--line); background: var(--page); color: var(--ink); font: inherit; font-size: 12px; text-align: left; text-decoration: none; cursor: pointer; }
@@ -47,6 +51,7 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 .recipe-print-action { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 22px; }
 .recipe-print-action button { padding: 10px 13px; border: 1px solid var(--accent-ink); background: var(--accent-ink); color: var(--page); font: 12px "IBM Plex Mono", monospace; cursor: pointer; }
 .recipe-print-action button[aria-pressed="true"] { background: var(--page); color: var(--accent-ink); }
+.recipe-print-action button:disabled { opacity: .5; cursor: not-allowed; }
 .recipe-print-action a { color: var(--accent-ink); font-size: 12px; text-underline-offset: 3px; }
 .card-print-settings { margin: -7px 0 24px; padding: 0 2px; }
 .card-print-settings h4 { margin: 0 0 9px; color: var(--accent-ink); font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }

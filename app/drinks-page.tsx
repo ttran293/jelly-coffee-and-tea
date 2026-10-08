@@ -7,7 +7,7 @@ import { Card3D } from "./card/studio";
 import { HeroCup } from "./hero-cup";
 import { CARD_SIZE, cardDataUrl } from "./card/artwork";
 import { cardPngDataUrl } from "./card/download";
-import { CARD_RECIPES, FEATURED_CARD_INDEX } from "./card/recipes";
+import { CARD_RECIPES, FEATURED_CARD_INDEX, MAX_PRINT_CARDS } from "./card/recipes";
 import { playMenu, playPaper, playTheme, setAudioEnabled, unlockAudio } from "./sound";
 
 const featuredCard = CARD_RECIPES[FEATURED_CARD_INDEX];
@@ -30,18 +30,20 @@ function CardPngDownload({ theme, side }: { theme: ThemeName; side: "front" | "b
   return <a href={url || undefined} download={`jelly-coffee-lab-${theme}-${featuredCard.id}-${side}.png`} aria-disabled={!url}>{url ? "download PNG ↓" : failed ? "PNG unavailable" : "preparing PNG…"}</a>;
 }
 
-function CardSheetDownload({ theme, selectedIds, onToggle, onClear }: { theme: ThemeName; selectedIds: string[]; onToggle: (id: string) => void; onClear: () => void }) {
+function CardSheetDownload({ theme, selectedIds, onDuplicate, onRemove, onClear }: { theme: ThemeName; selectedIds: string[]; onDuplicate: (id: string) => void; onRemove: (id: string) => void; onClear: () => void }) {
   const selection = `theme=${theme}&recipes=${selectedIds.join(",")}`;
+  const quantities = new Map<string, number>();
+  selectedIds.forEach((id) => quantities.set(id, (quantities.get(id) ?? 0) + 1));
   return <div id="print-selection" className="card-sheet-download">
-    <p>Add recipes as you browse, then download the cards here. Each front is followed by its aligned back for double-sided printing.</p>
+    <p>Add recipes as you browse. Use duplicate to print extra copies, then download separate front and back PDFs for single-sided cardstock.</p>
     <div className="card-sheet-review" aria-live="polite">
-      <div className="card-sheet-review-head"><span>SELECTED / {String(selectedIds.length).padStart(2, "0")}</span>{selectedIds.length > 0 && <button type="button" onClick={onClear}>clear all</button>}</div>
-      {selectedIds.length === 0 ? <p>No recipes selected yet. Open a recipe and choose “add to print”.</p> : <ol>{selectedIds.map((id) => { const recipe = CARD_RECIPES.find((card) => card.id === id); return recipe && <li key={id}><span>{recipe.title}</span><button type="button" onClick={() => onToggle(id)} aria-label={`Remove ${recipe.title} from print selection`}>remove ×</button></li>; })}</ol>}
+      <div className="card-sheet-review-head"><span>SELECTED {String(selectedIds.length).padStart(2, "0")} / {MAX_PRINT_CARDS}</span>{selectedIds.length > 0 && <button type="button" onClick={onClear}>clear all</button>}</div>
+      {selectedIds.length === 0 ? <p>No recipes selected yet. Open a recipe and choose “add to print”.</p> : <ol>{[...quantities].map(([id, quantity]) => { const recipe = CARD_RECIPES.find((card) => card.id === id); return recipe && <li key={id}><span className="card-sheet-recipe-name">{recipe.title}{quantity > 1 && <strong>x{quantity}</strong>}</span><div className="card-sheet-review-actions"><button type="button" onClick={() => onDuplicate(id)} disabled={selectedIds.length >= MAX_PRINT_CARDS} aria-label={`Add another copy of ${recipe.title}`}>duplicate +</button><button type="button" onClick={() => onRemove(id)} aria-label={`Remove one copy of ${recipe.title}`}>remove ×</button></div></li>; })}</ol>}
     </div>
-    {selectedIds.length > 0 && <p className="card-sheet-count">{selectedIds.length} {selectedIds.length === 1 ? "recipe" : "recipes"} · {Math.ceil(selectedIds.length / 10)} business {selectedIds.length <= 10 ? "sheet" : "sheets"} or {Math.ceil(selectedIds.length / 3)} larger {selectedIds.length <= 3 ? "sheet" : "sheets"}</p>}
+    {selectedIds.length > 0 && <p className="card-sheet-count">{selectedIds.length} {selectedIds.length === 1 ? "card" : "cards"} · 1 sheet per PDF</p>}
     <div className="card-sheet-buttons">
-      <a href={selectedIds.length ? `/api/card-sheet?size=business&${selection}` : undefined} aria-disabled={!selectedIds.length} download>download business card sheet ↓<small>3.5 × 2 in · up to 10 per Letter sheet</small></a>
-      <a href={selectedIds.length ? `/api/card-sheet?size=recipe&${selection}` : undefined} aria-disabled={!selectedIds.length} download>download larger recipe sheet ↓<small>5 × 3 in · up to 3 per Letter sheet</small></a>
+      <a href={selectedIds.length ? `/api/card-sheet?side=front&${selection}` : undefined} aria-disabled={!selectedIds.length} download>download fronts PDF ↓<small>3.5 × 2 in · up to 10 per Letter sheet</small></a>
+      <a href={selectedIds.length ? `/api/card-sheet?side=back&${selection}` : undefined} aria-disabled={!selectedIds.length} download>download backs PDF ↓<small>Matching backs · same number of sheets</small></a>
     </div>
   </div>;
 }
@@ -191,7 +193,7 @@ const toppings: Recipe[] = [
 
 let visitRequest: Promise<number | null> | null = null;
 
-function RecipeEntry({ recipe, isOpen, onSelect, isPicked, onTogglePrint }: { recipe: Recipe; isOpen: boolean; onSelect: (recipe: Recipe | null) => void; isPicked?: boolean; onTogglePrint?: (id: string) => void }) {
+function RecipeEntry({ recipe, isOpen, onSelect, isPicked, printIsFull, onTogglePrint }: { recipe: Recipe; isOpen: boolean; onSelect: (recipe: Recipe | null) => void; isPicked?: boolean; printIsFull?: boolean; onTogglePrint?: (id: string) => void }) {
   return <div className="drink-entry">
     <button id={`drink-${recipe.id}`} type="button" className="drink-row" onClick={() => onSelect(isOpen ? null : recipe)} aria-expanded={isOpen} aria-controls={`recipe-${recipe.id}`} aria-label={`${isOpen ? "Hide" : "Read"} ${recipe.name} recipe`}>
       <span className="drink-number">{recipe.number} /</span><span className="drink-info"><strong>{recipe.name}</strong><small>{recipe.description}</small></span><span className="drink-kind">{(recipe.typeLabel ?? recipe.kind).toUpperCase()}</span><span className="row-arrow" aria-hidden="true">{isOpen ? "−" : "+"}</span>
@@ -203,7 +205,7 @@ function RecipeEntry({ recipe, isOpen, onSelect, isPicked, onTogglePrint }: { re
       {recipe.note && <p className="lab-note"><strong>Note:</strong> {recipe.note}</p>}
       {recipe.variations && <div className="lab-note"><strong>Notes / variations</strong><ul>{recipe.variations.map((item) => <li key={item}>{item}</li>)}</ul></div>}
       {recipe.sample && <p className="sample-label">[ sample recipe / version 01 ]</p>}
-      {onTogglePrint && <div className="recipe-print-action"><button type="button" aria-pressed={isPicked} onClick={() => onTogglePrint(recipe.id)}>{isPicked ? "✓ added to print · remove" : "+ add this recipe to print"}</button>{isPicked && <a href="#print-selection">view print selection ↓</a>}</div>}
+      {onTogglePrint && <div className="recipe-print-action"><button type="button" aria-pressed={isPicked} disabled={printIsFull && !isPicked} onClick={() => onTogglePrint(recipe.id)}>{isPicked ? "✓ added to print · remove" : printIsFull ? "print list full" : "+ add this recipe to print"}</button>{isPicked && <a href="#print-selection">view print selection ↓</a>}</div>}
     </article>}
   </div>;
 }
@@ -219,7 +221,23 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
   const visibleDrinks = drinks.filter((drink) => filter === "All" || drink.kind === filter);
 
   function togglePrintRecipe(id: string) {
-    setSelectedCardIds((current) => current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id]);
+    setSelectedCardIds((current) => current.includes(id) ? current.filter((selectedId) => selectedId !== id) : current.length < MAX_PRINT_CARDS ? [...current, id] : current);
+  }
+
+  function duplicatePrintRecipe(id: string) {
+    setSelectedCardIds((current) => {
+      const index = current.lastIndexOf(id);
+      return current.length >= MAX_PRINT_CARDS || index === -1
+        ? current
+        : [...current.slice(0, index + 1), id, ...current.slice(index + 1)];
+    });
+  }
+
+  function removePrintRecipe(id: string) {
+    setSelectedCardIds((current) => {
+      const index = current.lastIndexOf(id);
+      return index === -1 ? current : current.filter((_, cardIndex) => cardIndex !== index);
+    });
   }
 
   useEffect(() => {
@@ -308,27 +326,27 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
         <section id="drinks" className="recipe-section drink-list" aria-labelledby="drinks-title">
           <div className="section-heading"><span className="section-label">DRINKS.TXT</span><h2 id="drinks-title">drinks</h2><p className="testing-line"><span tabIndex={0}>What we are testing.</span></p></div>
           <div className="list-header"><span>FILE NAME</span><div className="filters" role="group" aria-label="Filter drinks">{(["All", "Tea", "Coffee"] as const).map((item) => <button type="button" key={item} onClick={() => { setFilter(item); setSelected(null); }} aria-pressed={filter === item}>{item.toLowerCase()}</button>)}</div></div>
-          {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} isPicked={selectedCardIds.includes(drink.id)} onTogglePrint={togglePrintRecipe} />)}
+          {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} isPicked={selectedCardIds.includes(drink.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
           <p className="list-note">* recipes change when we make something better</p>
         </section>
 
         <section id="toppings" className="recipe-section topping-list" aria-labelledby="toppings-title">
           <div className="section-heading"><span className="section-label">TOPPINGS.TXT</span><h2 id="toppings-title">toppings</h2><p>The bits we put on top.</p></div>
           <div className="list-header"><span>FILE NAME</span><span>{toppings.length} {toppings.length === 1 ? "FILE" : "FILES"}</span></div>
-          {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} isPicked={selectedCardIds.includes(topping.id)} onTogglePrint={togglePrintRecipe} />)}
+          {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} isPicked={selectedCardIds.includes(topping.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
         </section>
         <section id="card" className="recipe-section home-card" aria-labelledby="card-title">
           <div className="section-heading"><span className="section-label">CARD.TXT</span><h2 id="card-title">the little card</h2><p>Print it, punch it, save for later.</p></div>
           <Card3D theme={theme} />
           <div className="home-card-print">
             <h3>print the card</h3>
-            <CardSheetDownload theme={theme} selectedIds={selectedCardIds} onToggle={togglePrintRecipe} onClear={() => setSelectedCardIds([])} />
+            <CardSheetDownload theme={theme} selectedIds={selectedCardIds} onDuplicate={duplicatePrintRecipe} onRemove={removePrintRecipe} onClear={() => setSelectedCardIds([])} />
             <div className="card-print-settings">
               <h4>print settings / PDF</h4>
               <ul>
-                <li><strong>Paper:</strong> US Letter (8.5 × 11 in), color, one PDF page per sheet</li>
+                <li><strong>Paper:</strong> US Letter (8.5 × 11 in), color, up to ten 3.5 × 2 in cards per sheet</li>
                 <li><strong>Size:</strong> Actual Size / 100% — not Fit or Shrink</li>
-                <li><strong>Sides:</strong> Double-sided, flip on long edge</li>
+                <li><strong>Sides:</strong> Print the front and back PDFs separately, each single-sided</li>
                 <li><strong>Paper type:</strong> Cardstock, heavyweight, or matte, if your printer offers it</li>
               </ul>
             </div>
@@ -337,7 +355,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: ThemeName }
               <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Printable 5 by 3 inch recipe front for ${featuredCard.title} with a small dog logo`} /><figcaption><span>FRONT / RECIPE {featuredCard.number}</span><CardPngDownload theme={theme} side="front" /></figcaption></figure>
               <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Printable 5 by 3 inch back with the Jelly Coffee Lab dog logo and shop name" /><figcaption><span>BACK / ORIGINAL MARK</span><CardPngDownload theme={theme} side="back" /></figcaption></figure>
             </div>
-            <p className="home-card-print-tip">Test one sheet before cutting along the trim marks. The punch guide on the back is mirrored to line up with the front.</p>
+            <p className="home-card-print-tip">Test one sheet from each PDF before printing the full set. Cut along the trim marks, then pair each front with a back.</p>
           </div>
         </section>
         <footer><span>© jelly coffee lab</span><a href="#top">back to top ↑</a></footer>

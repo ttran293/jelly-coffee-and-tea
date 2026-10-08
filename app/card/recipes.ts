@@ -118,3 +118,4 @@ export const CARD_RECIPES: CardRecipe[] = [
 ];
 
 export const FEATURED_CARD_INDEX = 2;
+export const MAX_PRINT_CARDS = 10;
