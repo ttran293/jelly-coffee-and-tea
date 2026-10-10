@@ -8,7 +8,7 @@ export type CardRecipe = {
   note: string;
 };
 
-// Short card-sized versions of the drink recipes shown in the notebook above.
+// Short card-sized versions of the recipes shown in the notebook above.
 export const CARD_RECIPES: CardRecipe[] = [
   {
     id: "strawberry-matcha",
@@ -114,6 +114,73 @@ export const CARD_RECIPES: CardRecipe[] = [
       ["Pour over two iced", "drinks right away."],
     ],
     note: "DON'T WHIP IT STIFF.",
+  },
+  {
+    id: "sesame-cucumber-bites",
+    number: "09",
+    title: "Sesame cucumber bites",
+    meta: "15 MIN · 12 BITES",
+    ingredients: ["1 large cucumber", "1/2 cup Greek yogurt", "1 tsp lemon juice", "1 tsp toasted sesame oil", "1 tsp sesame seeds", "Salt; chili + scallions optional"],
+    steps: [
+      ["Slice cucumber into", "12 thick rounds; pat dry."],
+      ["Mix yogurt, lemon,", "sesame oil + salt."],
+      ["Top cucumber with", "yogurt + sesame seeds."],
+      ["Add chili or scallions;", "serve right away."],
+    ],
+    note: "SERVE WHILE THE CUCUMBER IS CRISP.",
+  },
+  {
+    id: "lemon-herb-yogurt-sauce",
+    number: "10",
+    title: "Lemon herb yogurt sauce",
+    meta: "10 MIN · 3/4 CUP",
+    ingredients: ["3/4 cup Greek yogurt", "1 tbsp lemon juice", "1 tbsp dill or parsley", "1 small garlic clove", "1 tbsp water, plus more", "Salt + black pepper"],
+    steps: [
+      ["Mix yogurt, lemon,", "herbs + grated garlic."],
+      ["Add water until the", "sauce pours as you like."],
+      ["Season with salt +", "pepper; taste for lemon."],
+    ],
+    note: "GARLIC GETS STRONGER AS IT SITS.",
+  },
+  {
+    id: "garlic-mushroom-toast",
+    number: "11",
+    title: "Garlic mushroom toast",
+    meta: "20 MIN · 2 TOASTS",
+    ingredients: ["2 thick slices of bread", "200 g sliced mushrooms", "1 tbsp olive oil", "1 garlic clove + 1 tsp butter", "1 tsp lemon juice", "Salt, pepper + parsley"],
+    steps: [
+      ["Toast the bread", "until golden."],
+      ["Brown mushrooms in", "oil for 5–7 minutes."],
+      ["Add garlic + butter;", "cook 1 minute. Season."],
+      ["Add lemon; spoon onto", "toast with parsley."],
+    ],
+    note: "GIVE MUSHROOMS ROOM TO BROWN.",
+  },
+  {
+    id: "blueberry-gin-fizz",
+    number: "12",
+    title: "Blueberry gin fizz",
+    meta: "8 MIN · 1 GLASS",
+    ingredients: ["8 fresh blueberries", "45 ml gin", "20 ml lemon juice", "15 ml simple syrup", "60 ml sparkling water", "Ice + lemon slice"],
+    steps: [
+      ["Muddle berries with", "lemon juice + syrup."],
+      ["Shake with gin + ice;", "strain over fresh ice."],
+      ["Top with sparkling", "water; garnish."],
+    ],
+    note: "USE LESS SYRUP FOR SWEET BERRIES.",
+  },
+  {
+    id: "blueberry-lime-spritz",
+    number: "13",
+    title: "Blueberry lime spritz",
+    meta: "7 MIN · 1 GLASS",
+    ingredients: ["10 fresh blueberries", "20 ml lime juice", "15 ml simple syrup", "120 ml sparkling water", "Ice", "Mint sprig (optional)"],
+    steps: [
+      ["Muddle berries with", "lime juice + syrup."],
+      ["Fill glass with ice;", "add sparkling water."],
+      ["Stir gently and", "garnish with mint."],
+    ],
+    note: "ADD BUBBLES JUST BEFORE SERVING.",
   },
 ];
 

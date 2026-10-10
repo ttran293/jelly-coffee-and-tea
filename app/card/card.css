@@ -46,6 +46,13 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 .card-sheet-buttons a:hover { transform: translateY(-2px); }
 .card-sheet-buttons a[aria-disabled="true"] { opacity: .5; pointer-events: none; }
 .card-sheet-buttons small { font-size: 10px; opacity: .8; }
+.card-back-alignment { margin: 15px 0 0; padding: 10px 12px 12px; border: 1px solid var(--line); }
+.card-back-alignment legend { padding: 0 5px; color: var(--accent-ink); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.card-back-alignment-controls { display: flex; flex-wrap: wrap; gap: 12px 20px; }
+.card-back-alignment label { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 12px; }
+.card-back-alignment select { min-width: 64px; padding: 5px 7px; border: 1px solid var(--line); background: var(--page); color: var(--ink); font: inherit; cursor: pointer; }
+.card-back-alignment select:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.card-back-alignment p { margin: 10px 0 0; color: var(--muted-ink); font-size: 11px; line-height: 1.5; }
 .recipe-print-action button:focus-visible, .recipe-print-action a:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
 .nav-card-count { color: var(--accent-ink); }
 .recipe-print-action { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 22px; }

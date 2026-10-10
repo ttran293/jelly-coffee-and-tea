@@ -11,6 +11,12 @@ export async function GET(request: Request) {
     return new Response("Choose front or back card sheet.", { status: 400 });
   }
 
+  const offsetX = Number(parameters.get("offsetX") ?? 0);
+  const offsetY = Number(parameters.get("offsetY") ?? 0);
+  if (!Number.isFinite(offsetX) || !Number.isFinite(offsetY) || Math.abs(offsetX) > 5 || Math.abs(offsetY) > 5) {
+    return new Response("Back alignment must be between -5 and 5 mm.", { status: 400 });
+  }
+
   const theme = readTheme(parameters.get("theme") ?? undefined);
   const requestedIds = parameters.get("recipes")?.split(",") ?? [CARD_RECIPES[FEATURED_CARD_INDEX].id];
   const recipes = requestedIds.map((id) => CARD_RECIPES.find((recipe) => recipe.id === id));
@@ -18,11 +24,11 @@ export async function GET(request: Request) {
     return new Response(`Choose 1 to ${MAX_PRINT_CARDS} valid recipe cards.`, { status: 400 });
   }
 
-  const pdf = await cardSheetPdf(theme, recipes as typeof CARD_RECIPES, side);
+  const pdf = await cardSheetPdf(theme, recipes as typeof CARD_RECIPES, side, { x: offsetX, y: offsetY });
   return new Response(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="jelly-coffee-lab-${recipes.length}-cards-${side}.pdf"`,
+      "Content-Disposition": `attachment; filename="jellys-lab-${recipes.length}-cards-${side}.pdf"`,
       "Cache-Control": "no-store",
     },
   });

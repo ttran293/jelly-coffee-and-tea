@@ -1,6 +1,6 @@
-# Jelly Coffee Lab
+# Jelly's Lab
 
-A small coffee and tea recipe notebook. The page has About, Drinks, Toppings, and Card sections, with three drinks and one topping. The homepage card section has a Three.js book-ring preview featuring the go-to basic matcha latte, plus matching printable front and back SVG artwork. Visitors can choose Blush Sky or Spring Mist; the other theme palettes remain in the project. The site also has a Supabase visit counter. The selected theme is saved in a one-year cookie; Blush Sky is the default.
+A recipe notebook with three collections: Coffee/Tea in Spring Mist for coffee, tea, and toppings; Food in Butter Paper for appetizers, sauces, and food; and Drinks in Blueberry for cocktails and mocktails. Each recipe has ingredients and steps and can be added to a printable card selection. The card section has a Three.js book-ring preview and matching printable front and back artwork for the selected collection. The site also has a Supabase visit counter; the selected collection is saved in a one-year cookie.
 
 ## Run locally
 

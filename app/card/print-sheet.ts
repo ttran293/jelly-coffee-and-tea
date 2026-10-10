@@ -7,17 +7,18 @@ import { cardSvg } from "./artwork";
 export type PrintSheetSide = "front" | "back";
 
 const POINTS_PER_INCH = 72;
+const POINTS_PER_MM = POINTS_PER_INCH / 25.4;
 const LETTER = { width: 8.5 * POINTS_PER_INCH, height: 11 * POINTS_PER_INCH };
 const layout = { width: 3.5, height: 2, columns: 2, rows: 5 } as const;
 
-export async function cardSheetPdf(theme: ThemeName, recipes: CardRecipe[], side: PrintSheetSide) {
+export async function cardSheetPdf(theme: ThemeName, recipes: CardRecipe[], side: PrintSheetSide, backOffsetMm = { x: 0, y: 0 }) {
   const pixelSize = { width: 1050, height: 600 };
   const renderSide = (recipe: CardRecipe, side: "front" | "back") => sharp(Buffer.from(cardSvg(theme, recipe, side)), { density: 300 })
     .resize({ ...pixelSize, fit: "fill" })
     .png()
     .toBuffer();
   const pdf = await PDFDocument.create();
-  pdf.setTitle(`${recipes.length} Jelly Coffee Lab recipe card ${side}s`);
+  pdf.setTitle(`${recipes.length} Jelly's Lab recipe card ${side}s`);
   pdf.setSubject(`US Letter sheets of 3.5 × 2 inch card ${side}s`);
   const preferences = pdf.catalog.getOrCreateViewerPreferences();
   preferences.setPrintScaling(PrintScaling.None);
@@ -43,8 +44,8 @@ export async function cardSheetPdf(theme: ThemeName, recipes: CardRecipe[], side
       // Manually turning the sheet over on its long edge mirrors the columns.
       const printedColumn = side === "back" ? layout.columns - column - 1 : column;
       page.drawImage(side === "front" ? fronts!.get(recipes[offset + index].id)! : back!, {
-        x: left + printedColumn * cardWidth,
-        y: bottom + (layout.rows - row - 1) * cardHeight,
+        x: left + printedColumn * cardWidth + (side === "back" ? backOffsetMm.x * POINTS_PER_MM : 0),
+        y: bottom + (layout.rows - row - 1) * cardHeight - (side === "back" ? backOffsetMm.y * POINTS_PER_MM : 0),
         width: cardWidth,
         height: cardHeight,
       });
