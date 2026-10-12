@@ -10,12 +10,6 @@ import { cardPngDataUrl } from "./card/download";
 import { CARD_RECIPES, FEATURED_CARD_INDEX, MAX_PRINT_CARDS, type CardRecipe } from "./card/recipes";
 import { playMenu, playPaper, playTheme, setAudioEnabled, unlockAudio } from "./sound";
 
-const collectionCards: Record<CollectionTheme, CardRecipe[]> = {
-  spring: CARD_RECIPES.slice(0, 3),
-  butter: CARD_RECIPES.filter((recipe) => ["sesame-cucumber-bites", "lemon-herb-yogurt-sauce", "garlic-mushroom-toast"].includes(recipe.id)),
-  blueberry: CARD_RECIPES.filter((recipe) => ["blueberry-gin-fizz", "blueberry-lime-spritz"].includes(recipe.id)),
-};
-
 function CardPngDownload({ theme, recipe, side }: { theme: ThemeName; recipe: CardRecipe; side: "front" | "back" }) {
   const [png, setPng] = useState<{ theme: ThemeName; recipeId: string; side: "front" | "back"; url: string } | null>(null);
   const url = png?.theme === theme && png.recipeId === recipe.id && png.side === side ? png.url : undefined;
@@ -71,10 +65,10 @@ const collectionSectionIds: Record<CollectionTheme, SectionId[]> = {
 };
 
 type Recipe = {
-  id: string; number: string; name: string; kind: "Tea" | "Coffee" | "Topping" | "Appetizer" | "Sauce" | "Food" | "Cocktail" | "Mocktail"; typeLabel?: string; folder?: string;
+  id: string; number: string; name: string; kind: "Tea" | "Coffee" | "Cocoa" | "Topping" | "Appetizer" | "Sauce" | "Food" | "Cocktail" | "Mocktail"; typeLabel?: string; folder?: string;
   description: string; image?: string; time: string; yield: string; lastMade?: string; tag?: string;
   ingredients: string[]; ingredientGroups?: { title: string; items: string[] }[];
-  method: string[]; note?: string; variations?: string[]; sample?: boolean;
+  method: string[]; note?: string; variations?: string[];
 };
 
 const themes: { id: CollectionTheme; label: string; name: string; colors: string[] }[] = [
@@ -93,23 +87,7 @@ function saveThemeCookie(choice: CollectionTheme) {
 
 const drinks: Recipe[] = [
   {
-    id: "strawberry-matcha", number: "01", name: "Strawberry cloud matcha", kind: "Tea",
-    description: "Strawberries, jam, matcha, milk.", image: "/strawberry-matcha-latte.png",
-    time: "8 min", yield: "1 glass",
-    ingredients: ["3 fresh strawberries (about 45 g)", "12 g strawberry jam", "2 g matcha powder", "30 ml warm water (about 80°C / 176°F)", "150 ml cold milk of choice", "40 ml cold vanilla cream or sweet foam", "Ice"],
-    method: ["Mash the strawberries with the jam in the bottom of a tall glass.", "Whisk matcha with warm water until smooth and lightly foamy.", "Fill the glass with ice, then pour in the milk.", "Slowly add the matcha. Spoon the vanilla cream on top and serve right away."],
-    note: "12 g jam worked. Next time: try 6 g and see if the layers still hold.", sample: true,
-  },
-  {
-    id: "honey-oat-espresso", number: "02", name: "Honey oat espresso", kind: "Coffee",
-    description: "Espresso, honey, oat milk, a pinch of salt.", image: "/honey-oat-espresso.png",
-    time: "5 min", yield: "1 glass",
-    ingredients: ["1 double espresso (about 36 g)", "12 g honey", "150 ml chilled oat milk", "A tiny pinch of flaky salt", "Ice"],
-    method: ["Stir the honey and salt into the hot espresso until dissolved.", "Fill a short glass with ice and add the oat milk.", "Pour the espresso over the milk. Give it one gentle stir before sipping."],
-    note: "We keep forgetting the salt. It makes a difference. Darker espresso next time?", sample: true,
-  },
-  {
-    id: "basic-matcha-latte", number: "03", name: "Go-to Basic Matcha Latte", kind: "Tea", typeLabel: "Matcha",
+    id: "basic-matcha-latte", number: "01", name: "Go-to Basic Matcha Latte", kind: "Tea", typeLabel: "Matcha",
     description: "Matcha, milk, syrup if wanted.",
     time: "5–10 min", yield: "1 glass", lastMade: "September 7, 2026",
     ingredients: [],
@@ -129,28 +107,38 @@ const drinks: Recipe[] = [
     ],
   },
   {
-    id: "brown-sugar-hojicha", number: "04", name: "Iced brown sugar hojicha", kind: "Tea", typeLabel: "Hojicha",
-    description: "Roasted tea, oat milk, brown sugar.",
-    time: "5 min", yield: "1 glass",
-    ingredients: ["1 tsp hojicha powder", "60 ml warm water (80°C / 175°F or cooler)", "180 ml chilled oat milk", "10–15 ml brown sugar syrup (recipe below)", "Ice"],
-    method: [
-      "Whisk the hojicha powder with a splash of the warm water until smooth. Add the remaining water and whisk again.",
-      "Add brown sugar syrup to a glass, then fill it with ice and pour in the oat milk.",
-      "Pour the hojicha over the milk. Stir before drinking, adding a little more syrup if needed.",
-    ],
-    note: "A little water first keeps the powder from clumping.",
+    id: "lemon-tea-batch", number: "02", name: "Lemon tea (batch)", kind: "Tea",
+    description: "Brewed tea and lemon syrup, chilled for a party.",
+    time: "Not specified", yield: "about 1 L",
+    ingredients: ["850 g brewed black, oolong, or jasmine green tea", "270 g lemon syrup (see Lemon syrup)", "Ice cubes"],
+    method: ["Brew the tea, or use Ito En bottled tea.", "Mix 270 g lemon syrup into the tea.", "Chill and serve over ice."],
+    variations: ["Adjust syrup to taste and to the tea used. Black tea may need more syrup.", "For one cup, use 30 g lemon syrup, 120 g tea, and 1 lemon slice."],
   },
   {
-    id: "orange-espresso-tonic", number: "05", name: "Orange espresso tonic", kind: "Coffee",
-    description: "Bright orange, cold tonic, espresso.",
-    time: "5 min", yield: "1 glass",
-    ingredients: ["1 espresso shot (about 35–40 ml)", "120 ml chilled tonic water", "15 ml fresh orange juice", "A strip of orange peel", "Ice"],
-    method: [
-      "Fill a tall glass with ice. Add the chilled tonic water and orange juice.",
-      "Pull the espresso into a separate cup, then pour it slowly over the ice to make a dark top layer.",
-      "Twist the orange peel over the glass and drop it in. Give the drink a gentle stir before sipping.",
+    id: "lemon-matcha", number: "03", name: "Lemon matcha", kind: "Tea", typeLabel: "Matcha",
+    description: "Lemon syrup beneath a layer of matcha.",
+    time: "Not specified", yield: "1 glass",
+    ingredients: ["35–40 g lemon syrup (see Lemon syrup)", "80 g water", "3 g matcha powder", "60 g warm water", "Ice cubes"],
+    method: ["Whisk matcha with 60 g warm water until smooth and frothy.", "In a serving glass, stir the lemon syrup with 80 g water.", "Fill with ice, then slowly pour matcha over the ice. Stir well before drinking."],
+  },
+  {
+    id: "salted-maple-matcha-latte", number: "04", name: "Salted maple cream top matcha latte", kind: "Tea", typeLabel: "Matcha",
+    description: "Maple matcha latte finished with salted maple cream.",
+    time: "Not specified", yield: "1 latte",
+    ingredientGroups: [
+      { title: "Salted maple cream top", items: ["4 tbsp heavy whipping cream", "1/4 tsp sea salt", "3 tbsp milk", "2 tsp maple syrup"] },
+      { title: "Matcha latte", items: ["3 g matcha", "30 g water at 170°F", "2–3 tsp maple syrup (use 2 tsp when whisking)", "90–100 g milk", "Ice (optional)"] },
     ],
-    note: "Keep the tonic cold and pour slowly so the bubbles stay lively.",
+    ingredients: [],
+    method: ["Combine the cream, sea salt, milk, and maple syrup. Froth until cream-textured and set aside.", "Sift matcha into a bowl or mug. Add 170°F water and 2 tsp maple syrup; whisk until smooth and frothy.", "Fill a glass with ice and add the milk.", "Pour the matcha over the milk.", "Spoon 20–30 g salted maple cream top over the latte and serve."],
+    note: "The topping also has its own recipe; adjust the amount to taste.",
+  },
+  {
+    id: "salted-cheese-cocoa", number: "05", name: "Salted cheese cocoa", kind: "Cocoa",
+    description: "Cocoa and condensed milk topped with salted cheese foam v1.0.",
+    time: "Not specified", yield: "1 glass",
+    ingredients: ["80 ml unsweetened milk", "20 ml condensed milk (about 1 tbsp)", "7 g cocoa powder", "50 ml hot water", "Salt, to taste", "30 g salted cheese foam v1.0 (see topping recipe)"],
+    method: ["Whisk cocoa powder with hot water until smooth.", "Stir in the unsweetened milk and condensed milk.", "Add a pinch of salt and adjust to taste.", "Top with 30 g salted cheese foam v1.0."],
   },
 ];
 
@@ -185,7 +173,7 @@ const toppings: Recipe[] = [
       "Let it bubble gently for 1–2 minutes, then take it off the heat and stir in the salt if using.",
       "Cool completely before adding to an iced drink. Start with 10–15 ml per glass and adjust to taste.",
     ],
-    note: "Try it in the iced hojicha latte above.",
+    note: "Add 10–15 ml to an iced drink and adjust to taste.",
   },
   {
     id: "vanilla-cold-foam", number: "03", name: "Vanilla cold foam", kind: "Topping", folder: "topping",
@@ -198,6 +186,42 @@ const toppings: Recipe[] = [
       "Spoon or pour over two iced drinks right away.",
     ],
     note: "Stop before it becomes whipped cream; it should settle gently on the drink.",
+  },
+  {
+    id: "lemon-syrup", number: "04", name: "Lemon syrup", kind: "Topping", folder: "topping",
+    description: "Brown sugar, lemon peel, and fresh lemon juice.",
+    time: "3–4 hr steep + 25–35 min cook", yield: "about 500 ml", tag: "Make ahead",
+    ingredients: ["800 g lemons", "About 192 g lemon peel, from the lemons", "400 g brown sugar", "A pinch of salt"],
+    method: ["Rub lemons with salt to remove wax and dirt. Rinse and pat dry.", "Peel the lemons, aiming for about 192 g yellow peel. Avoid the white pith.", "Massage brown sugar and a pinch of salt into the peels. Marinate for 3–4 hours.", "Juice the peeled lemons (about 200 ml juice) and refrigerate the juice.", "Transfer peels and extracted syrup to a pot. Simmer gently over low heat for about 10 minutes, then remove the peels.", "Let the syrup cool slightly to 70–80°C (158–176°F). Stir in the reserved lemon juice and simmer on low for about 10 minutes, skimming bubbles from the top.", "Cool completely, transfer to an airtight container, and refrigerate."],
+    variations: ["Add 80 g honey for a more honeyed flavor.", "Use in lemon tea or lemon matcha."],
+  },
+  {
+    id: "salted-maple-cream-top", number: "05", name: "Salted maple cream top", kind: "Topping", folder: "topping",
+    description: "A pourable maple cream topping for matcha.",
+    time: "Not specified", yield: "Not specified",
+    ingredients: ["4 tbsp heavy whipping cream", "1/4 tsp sea salt", "3 tbsp milk", "2 tsp maple syrup"],
+    method: ["Combine the heavy whipping cream, sea salt, milk, and maple syrup.", "Froth until cream-textured."],
+    note: "Use as a topping for salted maple cream top matcha latte.",
+  },
+  {
+    id: "salted-cheese-foam-v1", number: "06", name: "Salted cheese foam v1.0", kind: "Topping", folder: "topping",
+    description: "The cheese foam variation with Laughing Cow cheese.",
+    time: "15 min", yield: "3 servings", tag: "Quick",
+    ingredientGroups: [
+      { title: "Cream cheese part", items: ["2 oz (about 50 g) cream cheese, softened", "1 block Laughing Cow cheese", "2 tbsp (about 26 g) heavy cream", "1 tbsp (about 10 g) sugar"] },
+      { title: "Heavy cream part", items: ["2/3 cup (about 138 g) heavy cream", "2 tbsp (about 27 g) sugar", "1 tsp (about 3 g) sea salt", "1/2 tsp (about 1.5 g) vanilla"] },
+    ],
+    ingredients: ["About 1/4 cup (60 g) milk, plus 1–2 tbsp as needed"],
+    method: ["Whisk softened cream cheese, Laughing Cow cheese, 2 tbsp heavy cream, and 1 tbsp sugar until smooth.", "In another bowl, whisk 2/3 cup heavy cream with 2 tbsp sugar, salt, and vanilla to soft peaks.", "Fold the cheese mixture into the softly whipped cream.", "Add about 1/4 cup milk, then more as needed, until the foam pours off a spoon."],
+    note: "Do not overmix; the foam should stay pourable.",
+  },
+  {
+    id: "osmanthus-syrup", number: "07", name: "Osmanthus syrup", kind: "Topping", folder: "topping",
+    description: "Floral rock sugar syrup with tangerine.",
+    time: "25–35 min + cooling", yield: "Not specified", tag: "Make ahead",
+    ingredients: ["7 g dried osmanthus flowers", "200 ml water", "200 g rock sugar", "Juice of 1/2 tangerine", "A few strips of tangerine peel"],
+    method: ["Lightly rinse the dried osmanthus and reserve the flowers.", "Bring water to a boil, add osmanthus, reduce heat, and simmer for 10–15 minutes.", "Strain, reserving the flowers. Return the infused water to the pot and bring back to a boil.", "Add rock sugar. Gently swirl the pot without stirring until it dissolves.", "Add tangerine juice and peel. Reduce heat to low and simmer for 15–20 minutes.", "Continue simmering until the syrup is slightly thinner than desired; it thickens as it cools.", "Remove from heat, stir the reserved flowers back in, and cool.", "Transfer to an airtight container and refrigerate."],
+    note: "Swirl rather than stir to help keep the syrup clear.",
   },
 ];
 
@@ -278,6 +302,14 @@ const mocktails: Recipe[] = [
   },
 ];
 
+// The decorative 3D stack is a small preview; every recipe stays available in the notebook and print list.
+const MAX_STACK_CARDS = 3;
+const collectionCards: Record<CollectionTheme, CardRecipe[]> = {
+  spring: CARD_RECIPES.filter((card) => [...drinks, ...toppings].some((recipe) => recipe.id === card.id)).slice(0, MAX_STACK_CARDS),
+  butter: CARD_RECIPES.filter((card) => [...appetizers, ...sauces, ...food].some((recipe) => recipe.id === card.id)).slice(0, MAX_STACK_CARDS),
+  blueberry: CARD_RECIPES.filter((card) => [...cocktails, ...mocktails].some((recipe) => recipe.id === card.id)).slice(0, MAX_STACK_CARDS),
+};
+
 const foodSections = [
   { id: "appetizers", title: "appetizers", description: "Little things to start with.", recipes: appetizers },
   { id: "sauces", title: "sauces", description: "The extras that bring a plate together.", recipes: sauces },
@@ -302,7 +334,6 @@ function RecipeEntry({ recipe, isOpen, onSelect, isPicked, printIsFull, onToggle
       <div className="recipe-columns"><section><h3>What you&apos;ll need</h3>{recipe.ingredientGroups?.map((group) => <div className="recipe-ingredient-group" key={group.title}><h4>{group.title}</h4><ul>{group.items.map((item) => <li key={item}>{item}</li>)}</ul></div>)}{recipe.ingredients.length > 0 && <ul className={recipe.ingredientGroups ? "recipe-extra-ingredients" : undefined}>{recipe.ingredients.map((item) => <li key={item}>{item}</li>)}</ul>}</section><section><h3>Make it</h3><ol>{recipe.method.map((step) => <li key={step}>{step}</li>)}</ol></section></div>
       {recipe.note && <p className="lab-note"><strong>Note:</strong> {recipe.note}</p>}
       {recipe.variations && <div className="lab-note"><strong>Notes / variations</strong><ul>{recipe.variations.map((item) => <li key={item}>{item}</li>)}</ul></div>}
-      {recipe.sample && <p className="sample-label">[ sample recipe / version 01 ]</p>}
       {onTogglePrint && <div className="recipe-print-action"><button type="button" aria-pressed={isPicked} disabled={printIsFull && !isPicked} onClick={() => onTogglePrint(recipe.id)}>{isPicked ? "✓ added to print · remove" : printIsFull ? "print list full" : "+ add this recipe to print"}</button>{isPicked && <a href="#print-selection">view print selection ↓</a>}</div>}
     </article>}
   </div>;
@@ -310,7 +341,7 @@ function RecipeEntry({ recipe, isOpen, onSelect, isPicked, printIsFull, onToggle
 
 export default function DrinksPage({ initialTheme }: { initialTheme: CollectionTheme }) {
   const [theme, setTheme] = useState<CollectionTheme>(initialTheme);
-  const [filter, setFilter] = useState<"All" | "Tea" | "Coffee">("All");
+  const [filter, setFilter] = useState<"All" | "Tea" | "Cocoa">("All");
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [selectedCardsByTheme, setSelectedCardsByTheme] = useState<Record<CollectionTheme, string[]>>({ spring: [], butter: [], blueberry: [] });
   const [visitCount, setVisitCount] = useState<number | null>(null);
@@ -440,7 +471,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
 
         {theme === "spring" && <><section id="drinks" className="recipe-section drink-list" aria-labelledby="drinks-title">
           <div className="section-heading"><span className="section-label">COFFEE_TEA.TXT</span><h2 id="drinks-title">coffee/tea</h2><p className="testing-line"><span tabIndex={0}>What we are testing.</span></p></div>
-          <div className="list-header"><span>FILE NAME</span><div className="filters" role="group" aria-label="Filter coffee and tea">{(["All", "Tea", "Coffee"] as const).map((item) => <button type="button" key={item} onClick={() => { setFilter(item); setSelected(null); }} aria-pressed={filter === item}>{item.toLowerCase()}</button>)}</div></div>
+          <div className="list-header"><span>FILE NAME</span><div className="filters" role="group" aria-label="Filter drinks">{(["All", "Tea", "Cocoa"] as const).map((item) => <button type="button" key={item} onClick={() => { setFilter(item); setSelected(null); }} aria-pressed={filter === item}>{item.toLowerCase()}</button>)}</div></div>
           {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} isPicked={selectedCardIds.includes(drink.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
           <p className="list-note">* recipes change when we make something better</p>
         </section>
@@ -448,7 +479,9 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
         <section id="toppings" className="recipe-section topping-list" aria-labelledby="toppings-title">
           <div className="section-heading"><span className="section-label">TOPPINGS.TXT</span><h2 id="toppings-title">toppings</h2><p>The bits we put on top.</p></div>
           <div className="list-header"><span>FILE NAME</span><span>{toppings.length} {toppings.length === 1 ? "FILE" : "FILES"}</span></div>
-          {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} isPicked={selectedCardIds.includes(topping.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
+          <div className="topping-scroll" role="region" aria-label="Topping recipes, scroll for more" tabIndex={0}>
+            {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} isPicked={selectedCardIds.includes(topping.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
+          </div>
         </section></>}
         {visibleExtraSections.map((section) => <section key={section.id} id={section.id} className="recipe-section" aria-labelledby={`${section.id}-title`}>
           <div className="section-heading"><span className="section-label">{section.title.toUpperCase()}.TXT</span><h2 id={`${section.id}-title`}>{section.title}</h2><p>{section.description}</p></div>

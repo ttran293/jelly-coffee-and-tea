@@ -11,35 +11,8 @@ export type CardRecipe = {
 // Short card-sized versions of the recipes shown in the notebook above.
 export const CARD_RECIPES: CardRecipe[] = [
   {
-    id: "strawberry-matcha",
-    number: "01",
-    title: "Strawberry cloud matcha",
-    meta: "8 MIN · 1 GLASS",
-    ingredients: ["3 strawberries (~45 g)", "12 g strawberry jam", "2 g matcha + 30 ml water", "150 ml cold milk", "40 ml vanilla cream", "Ice"],
-    steps: [
-      ["Mash berries + jam", "in a tall glass."],
-      ["Whisk matcha with", "80°C warm water."],
-      ["Add ice + milk, then", "pour in the matcha."],
-      ["Top with vanilla", "cream and serve."],
-    ],
-    note: "NEXT TIME: TRY 6 G JAM.",
-  },
-  {
-    id: "honey-oat-espresso",
-    number: "02",
-    title: "Honey oat espresso",
-    meta: "5 MIN · 1 GLASS",
-    ingredients: ["1 double espresso (~36 g)", "12 g honey", "150 ml chilled oat milk", "A tiny pinch of flaky salt", "Ice"],
-    steps: [
-      ["Stir honey + salt into", "hot espresso until dissolved."],
-      ["Ice + oat milk in a", "short glass."],
-      ["Pour espresso over milk;", "give one gentle stir."],
-    ],
-    note: "DON'T FORGET THE SALT.",
-  },
-  {
     id: "basic-matcha-latte",
-    number: "03",
+    number: "01",
     title: "Go-to basic matcha latte",
     meta: "5–10 MIN · 1 GLASS",
     ingredients: ["3 g matcha", "30 g water at 175°F", "90–100 ml milk of choice", "1 tsp syrup (optional)", "Ice (optional)"],
@@ -51,30 +24,28 @@ export const CARD_RECIPES: CardRecipe[] = [
     note: "MATCHA : WATER : MILK = 1 : 10 : 30.",
   },
   {
-    id: "brown-sugar-hojicha",
-    number: "04",
-    title: "Iced brown sugar hojicha",
-    meta: "5 MIN · 1 GLASS",
-    ingredients: ["1 tsp hojicha powder", "60 ml warm water", "180 ml chilled oat milk", "10–15 ml brown sugar syrup", "Ice"],
-    steps: [
-      ["Whisk hojicha with a little", "water, then add the rest."],
-      ["Syrup + ice in a glass;", "pour in the oat milk."],
-      ["Pour hojicha over milk;", "stir before drinking."],
-    ],
-    note: "WHISK WITH A LITTLE WATER FIRST.",
+    id: "lemon-tea-batch", number: "02", title: "Lemon tea (batch)", meta: "ABOUT 1 L",
+    ingredients: ["850 g brewed tea", "270 g lemon syrup", "Ice"],
+    steps: [["Brew tea or use", "Ito En bottled tea."], ["Mix in lemon syrup.", "Chill well."], ["Serve over ice;", "adjust syrup to taste."]],
+    note: "BLACK TEA MAY NEED MORE SYRUP.",
   },
   {
-    id: "orange-espresso-tonic",
-    number: "05",
-    title: "Orange espresso tonic",
-    meta: "5 MIN · 1 GLASS",
-    ingredients: ["1 espresso shot (~40 ml)", "120 ml chilled tonic", "15 ml fresh orange juice", "A strip of orange peel", "Ice"],
-    steps: [
-      ["Fill a glass with ice;", "add tonic + orange juice."],
-      ["Slowly pour espresso", "over the ice."],
-      ["Twist orange peel over", "the glass; stir to sip."],
-    ],
-    note: "KEEP THE TONIC COLD.",
+    id: "lemon-matcha", number: "03", title: "Lemon matcha", meta: "1 GLASS",
+    ingredients: ["35–40 g lemon syrup", "80 g water", "3 g matcha", "60 g warm water", "Ice"],
+    steps: [["Whisk matcha with", "60 g warm water."], ["Mix lemon syrup +", "80 g water in glass."], ["Add ice; pour matcha", "over. Stir to drink."]],
+    note: "USE THE LEMON SYRUP RECIPE.",
+  },
+  {
+    id: "salted-maple-matcha-latte", number: "04", title: "Salted maple matcha", meta: "1 LATTE",
+    ingredients: ["3 g matcha + 30 g water", "2–3 tsp maple syrup", "90–100 g milk + ice", "4 tbsp heavy cream", "3 tbsp milk + 2 tsp maple", "1/4 tsp sea salt"],
+    steps: [["Froth cream, milk,", "maple + sea salt."], ["Whisk matcha with", "170°F water + maple."], ["Layer milk + matcha;", "top with 20–30 g cream."]],
+    note: "FROTH TOPPING UNTIL CREAMY.",
+  },
+  {
+    id: "salted-cheese-cocoa", number: "05", title: "Salted cheese cocoa", meta: "1 GLASS",
+    ingredients: ["7 g cocoa powder", "50 ml hot water", "80 ml unsweetened milk", "20 ml condensed milk", "Salt to taste", "30 g cheese foam v1.0"],
+    steps: [["Whisk cocoa with hot", "water until smooth."], ["Stir in both milks;", "add salt to taste."], ["Top with 30 g salted", "cheese foam v1.0."]],
+    note: "USE CHEESE FOAM V1.0.",
   },
   {
     id: "salted-cheese-foam",
@@ -100,7 +71,7 @@ export const CARD_RECIPES: CardRecipe[] = [
       ["Bubble gently for", "1–2 minutes; add salt."],
       ["Cool before adding", "10–15 ml to iced drinks."],
     ],
-    note: "TRY IT WITH ICED HOJICHA.",
+    note: "ADD 10–15 ML TO AN ICED DRINK.",
   },
   {
     id: "vanilla-cold-foam",
@@ -116,8 +87,32 @@ export const CARD_RECIPES: CardRecipe[] = [
     note: "DON'T WHIP IT STIFF.",
   },
   {
+    id: "lemon-syrup", number: "09", title: "Lemon syrup", meta: "~500 ML",
+    ingredients: ["800 g lemons", "~192 g lemon peel", "400 g brown sugar", "Pinch of salt", "~200 ml lemon juice"],
+    steps: [["Peel lemons; massage", "peel with sugar + salt."], ["Steep 3–4 hr; juice", "lemons and chill juice."], ["Simmer peels 10 min;", "remove, cool to 70–80°C."], ["Add juice; simmer", "10 min, skim + chill."]],
+    note: "AVOID WHITE PITH; REFRIGERATE.",
+  },
+  {
+    id: "salted-maple-cream-top", number: "10", title: "Salted maple cream", meta: "TOPPING",
+    ingredients: ["4 tbsp heavy cream", "1/4 tsp sea salt", "3 tbsp milk", "2 tsp maple syrup"],
+    steps: [["Combine cream, salt,", "milk + maple syrup."], ["Froth until cream-", "textured and pourable."], ["Top a maple matcha", "latte to taste."]],
+    note: "USE 20–30 G ON A LATTE.",
+  },
+  {
+    id: "salted-cheese-foam-v1", number: "11", title: "Cheese foam v1.0", meta: "15 MIN · 3 SERVINGS",
+    ingredients: ["2 oz cream cheese", "1 Laughing Cow cheese", "2/3 cup heavy cream", "2 tbsp cream + 3 tbsp sugar", "1 tsp salt + 1/2 tsp vanilla", "~1/4 cup milk"],
+    steps: [["Whisk cheeses, 2 tbsp", "cream + 1 tbsp sugar."], ["Whip remaining cream,", "sugar, salt + vanilla."], ["Fold together; thin", "with milk to pour."]],
+    note: "STOP AT SOFT PEAKS.",
+  },
+  {
+    id: "osmanthus-syrup", number: "12", title: "Osmanthus syrup", meta: "25–35 MIN + COOL",
+    ingredients: ["7 g dried osmanthus", "200 ml water", "200 g rock sugar", "1/2 tangerine, juiced", "Tangerine peel strips"],
+    steps: [["Rinse flowers; simmer", "in water 10–15 min."], ["Strain; reserve flowers.", "Swirl in rock sugar."], ["Add tangerine; simmer", "15–20 min, then cool."], ["Stir flowers back in;", "refrigerate in a jar."]],
+    note: "SYRUP THICKENS AS IT COOLS.",
+  },
+  {
     id: "sesame-cucumber-bites",
-    number: "09",
+    number: "13",
     title: "Sesame cucumber bites",
     meta: "15 MIN · 12 BITES",
     ingredients: ["1 large cucumber", "1/2 cup Greek yogurt", "1 tsp lemon juice", "1 tsp toasted sesame oil", "1 tsp sesame seeds", "Salt; chili + scallions optional"],
@@ -131,7 +126,7 @@ export const CARD_RECIPES: CardRecipe[] = [
   },
   {
     id: "lemon-herb-yogurt-sauce",
-    number: "10",
+    number: "14",
     title: "Lemon herb yogurt sauce",
     meta: "10 MIN · 3/4 CUP",
     ingredients: ["3/4 cup Greek yogurt", "1 tbsp lemon juice", "1 tbsp dill or parsley", "1 small garlic clove", "1 tbsp water, plus more", "Salt + black pepper"],
@@ -144,7 +139,7 @@ export const CARD_RECIPES: CardRecipe[] = [
   },
   {
     id: "garlic-mushroom-toast",
-    number: "11",
+    number: "15",
     title: "Garlic mushroom toast",
     meta: "20 MIN · 2 TOASTS",
     ingredients: ["2 thick slices of bread", "200 g sliced mushrooms", "1 tbsp olive oil", "1 garlic clove + 1 tsp butter", "1 tsp lemon juice", "Salt, pepper + parsley"],
@@ -158,7 +153,7 @@ export const CARD_RECIPES: CardRecipe[] = [
   },
   {
     id: "blueberry-gin-fizz",
-    number: "12",
+    number: "16",
     title: "Blueberry gin fizz",
     meta: "8 MIN · 1 GLASS",
     ingredients: ["8 fresh blueberries", "45 ml gin", "20 ml lemon juice", "15 ml simple syrup", "60 ml sparkling water", "Ice + lemon slice"],
@@ -171,7 +166,7 @@ export const CARD_RECIPES: CardRecipe[] = [
   },
   {
     id: "blueberry-lime-spritz",
-    number: "13",
+    number: "17",
     title: "Blueberry lime spritz",
     meta: "7 MIN · 1 GLASS",
     ingredients: ["10 fresh blueberries", "20 ml lime juice", "15 ml simple syrup", "120 ml sparkling water", "Ice", "Mint sprig (optional)"],
@@ -184,5 +179,5 @@ export const CARD_RECIPES: CardRecipe[] = [
   },
 ];
 
-export const FEATURED_CARD_INDEX = 2;
+export const FEATURED_CARD_INDEX = 0;
 export const MAX_PRINT_CARDS = 10;

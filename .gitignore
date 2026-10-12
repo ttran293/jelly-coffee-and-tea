@@ -38,6 +38,7 @@ yarn-error.log*
 next-env.d.ts
 *.tsbuildinfo
 # Local assistant and generated output files
+/AGENTS.md
 /.agents/
 /.codex/
 /outputs/

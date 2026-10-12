@@ -158,6 +158,18 @@ h1 { font: 400 clamp(64px, 7.2vw, 102px)/.85 "Handjet", monospace; letter-spacin
 .drink-kind { color: var(--pop); font-size: 13px; margin-left: auto; }
 .row-arrow { color: var(--pop); font-size: 20px; line-height: 1; transition: translate .2s; }
 .drink-row:hover .row-arrow { translate: 0 -2px; }
+.topping-scroll { max-height: 478px; padding: 4px 14px 4px 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.topping-scroll .drink-kind { display: none; }
+.topping-scroll .row-arrow { margin-left: auto; }
+.topping-scroll::-webkit-scrollbar { width: 6px; }
+.topping-scroll::-webkit-scrollbar-button { display: none; height: 0; }
+.topping-scroll::-webkit-scrollbar-track { background: transparent; }
+.topping-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+.topping-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent-ink); }
+.topping-scroll:focus-visible { outline: 1px solid var(--accent-ink); outline-offset: 3px; }
+@supports not selector(::-webkit-scrollbar) {
+  .topping-scroll { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+}
 .list-note { color: var(--muted-ink); font-size: 13px; margin-top: 26px; }
 
 .about { scroll-margin-top: 25px; }
@@ -204,7 +216,6 @@ footer a:hover { color: var(--accent-ink); }
 .lab-note strong { color: var(--accent-ink); }
 .lab-note ul { margin: 7px 0 0; padding-left: 19px; }
 .lab-note li + li { margin-top: 5px; }
-.sample-label { margin-top: 12px; color: var(--muted-ink); font-size: 11px; }
 
 @keyframes cursor-blink { 50% { opacity: 0; } }
 @keyframes sheet-appear { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
