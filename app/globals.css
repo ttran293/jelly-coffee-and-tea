@@ -186,6 +186,22 @@ h1 { font: 400 clamp(64px, 7.2vw, 102px)/.85 "Handjet", monospace; letter-spacin
 .about p { max-width: 490px; color: var(--soft-ink); font-size: 17px; }
 .about-ascii { margin-top: 24px; color: var(--pop); font-size: 14px; }
 .home-card .card-3d-wrap { height: clamp(320px, 38vw, 420px); }
+.cup-hop { margin-top: 110px; padding-top: 25px; border-top: 1px solid var(--line); }
+.cup-hop-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+.cup-hop h2 { font: 400 clamp(48px, 5.4vw, 70px)/.95 "Handjet", monospace; margin: 12px 0 8px; }
+.cup-hop-heading p { color: var(--soft-ink); font-size: 15px; }
+.cup-hop-score { display: flex; gap: 18px; color: var(--muted-ink); font-size: 11px; white-space: nowrap; }
+.cup-hop-score span { display: grid; gap: 2px; }
+.cup-hop-score strong { color: var(--accent-ink); font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.cup-hop-stage { position: relative; border: 1px solid var(--line); background: var(--panel); overflow: hidden; }
+.cup-hop-stage canvas { display: block; width: 100%; height: auto; aspect-ratio: 32 / 9; image-rendering: pixelated; touch-action: manipulation; cursor: pointer; }
+.cup-hop-message { position: absolute; top: 17px; left: 18px; pointer-events: none; color: var(--accent-ink); font-size: 12px; letter-spacing: .08em; }
+.cup-hop-controls { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; color: var(--muted-ink); font-size: 12px; }
+.cup-hop-controls a { display: inline-block; margin-top: 4px; color: var(--muted-ink); font-size: 10px; text-decoration: underline; text-underline-offset: 3px; }
+.cup-hop-controls a:hover { color: var(--accent-ink); }
+.cup-hop-controls button { min-height: 42px; padding: 8px 15px; border: 1px solid var(--accent-ink); background: var(--panel); color: var(--accent-ink); font: 13px/1.2 "IBM Plex Mono", monospace; }
+.cup-hop-controls button:hover { background: var(--accent-ink); color: var(--page); }
+.cup-hop-controls button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
 footer { display: flex; justify-content: space-between; gap: 20px; margin-top: 110px; padding: 20px 0 35px; border-top: 1px solid var(--line); color: var(--muted-ink); font-size: 13px; }
 footer a:hover { color: var(--accent-ink); }
 
@@ -238,6 +254,7 @@ footer a:hover { color: var(--accent-ink); }
   .about-first { margin-top: 27px; }
   .about-hero { grid-template-columns: minmax(0, 1fr) 275px; }
   .recipe-section { margin-top: 75px; }
+  .cup-hop { margin-top: 75px; }
   footer { margin-top: 75px; }
 }
 @media (max-width: 660px) {
@@ -256,6 +273,10 @@ footer a:hover { color: var(--accent-ink); }
   .drink-info small { font-size: 12px; }
   .drink-kind { display: none; }
   .row-arrow { margin-left: auto; }
+  .cup-hop-heading { align-items: start; flex-direction: column; gap: 12px; }
+  .cup-hop-stage canvas { width: 640px; max-width: none; height: 180px; }
+  .cup-hop-controls { align-items: start; flex-direction: column; }
+  .cup-hop-controls button { width: 100%; }
 }
 @media (max-width: 900px) {
   .recipe-columns { grid-template-columns: 1fr; gap: 20px; }
