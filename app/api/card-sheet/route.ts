@@ -1,6 +1,8 @@
 import { cardSheetPdf } from "../../card/print-sheet";
+import { cardSvg } from "../../card/artwork";
 import { CARD_RECIPES, FEATURED_CARD_INDEX, MAX_PRINT_CARDS } from "../../card/recipes";
 import { readTheme } from "../../theme";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 
@@ -24,7 +26,10 @@ export async function GET(request: Request) {
     return new Response(`Choose 1 to ${MAX_PRINT_CARDS} valid recipe cards.`, { status: 400 });
   }
 
-  const pdf = await cardSheetPdf(theme, recipes as typeof CARD_RECIPES, side, { x: offsetX, y: offsetY });
+  const pdf = await cardSheetPdf(recipes as typeof CARD_RECIPES, side, async (recipe, cardSide) => sharp(Buffer.from(cardSvg(theme, recipe, cardSide)), { density: 300 })
+    .resize({ width: 1050, height: 600, fit: "fill" })
+    .png()
+    .toBuffer(), { x: offsetX, y: offsetY });
   return new Response(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",

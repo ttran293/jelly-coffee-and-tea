@@ -31,11 +31,40 @@ function CardPngDownload({ theme, recipe, side }: { theme: ThemeName; recipe: Ca
 function CardSheetDownload({ theme, selectedIds, onDuplicate, onRemove, onClear }: { theme: ThemeName; selectedIds: string[]; onDuplicate: (id: string) => void; onRemove: (id: string) => void; onClear: () => void }) {
   const [backOffsetX, setBackOffsetX] = useState(0);
   const [backOffsetY, setBackOffsetY] = useState(0);
-  const selection = `theme=${theme}&recipes=${selectedIds.join(",")}`;
-  const backAlignment = `&offsetX=${backOffsetX}&offsetY=${backOffsetY}`;
+  const [preparing, setPreparing] = useState<"front" | "back" | null>(null);
+  const [printError, setPrintError] = useState("");
   const offsetOptions = Array.from({ length: 21 }, (_, index) => (index - 10) / 2);
   const quantities = new Map<string, number>();
   selectedIds.forEach((id) => quantities.set(id, (quantities.get(id) ?? 0) + 1));
+
+  async function downloadSheet(side: "front" | "back") {
+    if (!selectedIds.length || preparing) return;
+    setPreparing(side);
+    setPrintError("");
+    try {
+      const { cardSheetPdf } = await import("./card/print-sheet");
+      const recipes = selectedIds.map((id) => CARD_RECIPES.find((recipe) => recipe.id === id));
+      if (recipes.some((recipe) => !recipe)) throw new Error("A selected recipe is unavailable.");
+      const pdf = await cardSheetPdf(recipes as CardRecipe[], side, async (recipe, cardSide) => {
+        const png = await cardPngDataUrl(theme, recipe, cardSide);
+        const bytes = atob(png.slice(png.indexOf(",") + 1));
+        return Uint8Array.from(bytes, (character) => character.charCodeAt(0));
+      }, { x: backOffsetX, y: backOffsetY });
+      const url = URL.createObjectURL(new Blob([new Uint8Array(pdf)], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `jellys-lab-${selectedIds.length}-cards-${side}.pdf`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      setPrintError("Could not prepare the PDF. Please try again.");
+    } finally {
+      setPreparing(null);
+    }
+  }
+
   return <div id="print-selection" className="card-sheet-download">
     <p>Add recipes as you browse. Use duplicate to print extra copies, then download separate front and back PDFs for single-sided cardstock.</p>
     <div className="card-sheet-review" aria-live="polite">
@@ -44,9 +73,10 @@ function CardSheetDownload({ theme, selectedIds, onDuplicate, onRemove, onClear 
     </div>
     {selectedIds.length > 0 && <p className="card-sheet-count">{selectedIds.length} {selectedIds.length === 1 ? "card" : "cards"} · 1 sheet per PDF</p>}
     <div className="card-sheet-buttons">
-      <a href={selectedIds.length ? `/api/card-sheet?side=front&${selection}` : undefined} aria-disabled={!selectedIds.length} download>download fronts PDF ↓<small>3.5 × 2 in · up to 10 per Letter sheet</small></a>
-      <a href={selectedIds.length ? `/api/card-sheet?side=back&${selection}${backAlignment}` : undefined} aria-disabled={!selectedIds.length} download>download backs PDF ↓<small>3.5 × 2 in · same card count</small></a>
+      <button type="button" disabled={!selectedIds.length || preparing !== null} onClick={() => void downloadSheet("front")}>{preparing === "front" ? "preparing fronts PDF…" : "download fronts PDF ↓"}<small>3.5 × 2 in · up to 10 per Letter sheet</small></button>
+      <button type="button" disabled={!selectedIds.length || preparing !== null} onClick={() => void downloadSheet("back")}>{preparing === "back" ? "preparing backs PDF…" : "download backs PDF ↓"}<small>3.5 × 2 in · same card count</small></button>
     </div>
+    {printError && <p className="card-sheet-error" role="alert">{printError}</p>}
     <fieldset className="card-back-alignment">
       <legend>back alignment / mm</legend>
       <div className="card-back-alignment-controls">

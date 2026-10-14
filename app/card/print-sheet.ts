@@ -1,22 +1,15 @@
-import type { ThemeName } from "../theme";
 import type { CardRecipe } from "./recipes";
-import sharp from "sharp";
 import { PDFDocument, PrintScaling, rgb } from "pdf-lib";
-import { cardSvg } from "./artwork";
 
 export type PrintSheetSide = "front" | "back";
+export type RenderCardSide = (recipe: CardRecipe, side: PrintSheetSide) => Promise<Uint8Array>;
 
 const POINTS_PER_INCH = 72;
 const POINTS_PER_MM = POINTS_PER_INCH / 25.4;
 const LETTER = { width: 8.5 * POINTS_PER_INCH, height: 11 * POINTS_PER_INCH };
 const layout = { width: 3.5, height: 2, columns: 2, rows: 5 } as const;
 
-export async function cardSheetPdf(theme: ThemeName, recipes: CardRecipe[], side: PrintSheetSide, backOffsetMm = { x: 0, y: 0 }) {
-  const pixelSize = { width: 1050, height: 600 };
-  const renderSide = (recipe: CardRecipe, side: "front" | "back") => sharp(Buffer.from(cardSvg(theme, recipe, side)), { density: 300 })
-    .resize({ ...pixelSize, fit: "fill" })
-    .png()
-    .toBuffer();
+export async function cardSheetPdf(recipes: CardRecipe[], side: PrintSheetSide, renderSide: RenderCardSide, backOffsetMm = { x: 0, y: 0 }) {
   const pdf = await PDFDocument.create();
   pdf.setTitle(`${recipes.length} Jelly's Lab recipe card ${side}s`);
   pdf.setSubject(`US Letter sheets of 3.5 × 2 inch card ${side}s`);

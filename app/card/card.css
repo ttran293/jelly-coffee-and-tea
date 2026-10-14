@@ -20,7 +20,7 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 .card-3d-actions button:hover { background: var(--accent-ink); color: var(--page); }
 .card-3d-actions button + button { background: var(--panel); color: var(--ink); border: 1px solid var(--line); padding: 10px 14px; }
 .card-3d-actions button + button:hover { background: var(--page); color: var(--accent-ink); }
-.card-3d-actions button:focus-visible, .flat-grid a:focus-visible, .card-sheet-buttons a:focus-visible, .card-sheet-review button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
+.card-3d-actions button:focus-visible, .flat-grid a:focus-visible, .card-sheet-buttons button:focus-visible, .card-sheet-review button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
 
 .home-card-print { margin-top: 20px; border-top: 1px solid var(--line); }
 .home-card-print h3 { margin: 0; padding: 17px 0 0; color: var(--accent-ink); font-size: 14px; font-weight: 500; }
@@ -41,11 +41,12 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 .card-sheet-review button:disabled { opacity: .45; cursor: not-allowed; text-decoration: none; }
 .card-sheet-download .card-sheet-count { margin-bottom: 12px; color: var(--ink); }
 .card-sheet-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.card-sheet-buttons a { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 13px 15px; border: 1px solid var(--line); background: var(--page); color: var(--ink); font: inherit; font-size: 12px; text-align: left; text-decoration: none; cursor: pointer; }
-.card-sheet-buttons a:first-child { border-color: var(--accent-ink); background: var(--accent-ink); color: var(--page); }
-.card-sheet-buttons a:hover { transform: translateY(-2px); }
-.card-sheet-buttons a[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+.card-sheet-buttons button { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 13px 15px; border: 1px solid var(--line); background: var(--page); color: var(--ink); font: inherit; font-size: 12px; text-align: left; text-decoration: none; cursor: pointer; }
+.card-sheet-buttons button:first-child { border-color: var(--accent-ink); background: var(--accent-ink); color: var(--page); }
+.card-sheet-buttons button:hover:not(:disabled) { transform: translateY(-2px); }
+.card-sheet-buttons button:disabled { opacity: .5; cursor: not-allowed; }
 .card-sheet-buttons small { font-size: 10px; opacity: .8; }
+.card-sheet-download .card-sheet-error { margin: 10px 0 0; color: var(--accent-ink); }
 .card-back-alignment { margin: 15px 0 0; padding: 10px 12px 12px; border: 1px solid var(--line); }
 .card-back-alignment legend { padding: 0 5px; color: var(--accent-ink); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
 .card-back-alignment-controls { display: flex; flex-wrap: wrap; gap: 12px 20px; }
