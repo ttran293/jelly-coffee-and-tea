@@ -5,9 +5,9 @@ import { cardDataUrl } from "./artwork";
 const PNG_WIDTH = 1500;
 const PNG_HEIGHT = 900;
 
-export async function cardPngDataUrl(theme: ThemeName, recipe: CardRecipe, side: "front" | "back") {
+export async function cardPngDataUrl(theme: ThemeName, recipe: CardRecipe, side: "front" | "back", sheet = false) {
   const image = new window.Image();
-  image.src = cardDataUrl(theme, recipe, side);
+  image.src = cardDataUrl(theme, recipe, side, false, sheet);
   await image.decode();
 
   const canvas = document.createElement("canvas");

@@ -46,7 +46,7 @@ function CardSheetDownload({ theme, selectedIds, onDuplicate, onRemove, onClear 
       const recipes = selectedIds.map((id) => CARD_RECIPES.find((recipe) => recipe.id === id));
       if (recipes.some((recipe) => !recipe)) throw new Error("A selected recipe is unavailable.");
       const pdf = await cardSheetPdf(recipes as CardRecipe[], side, async (recipe, cardSide) => {
-        const png = await cardPngDataUrl(theme, recipe, cardSide);
+        const png = await cardPngDataUrl(theme, recipe, cardSide, true);
         const bytes = atob(png.slice(png.indexOf(",") + 1));
         return Uint8Array.from(bytes, (character) => character.charCodeAt(0));
       }, { x: backOffsetX, y: backOffsetY });
@@ -534,7 +534,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
                 <li><strong>Feed:</strong> Use a manual or straight paper path if available; feed one cardstock sheet at a time</li>
               </ul>
             </div>
-            <p className="home-card-print-note">Individual 5 × 3 in artwork · 1500 × 900 px PNG · {themes.find((option) => option.id === theme)?.label} colors · ⅛ in punch guide</p>
+            <p className="home-card-print-note">Individual 5 × 3 in artwork · 1500 × 900 px PNG · {themes.find((option) => option.id === theme)?.label} colors · ¼ in punch guide</p>
             <div className="flat-grid">
               <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Printable 5 by 3 inch recipe front for ${featuredCard.title} with a small dog logo`} /><figcaption><span>FRONT / RECIPE {featuredCard.number}</span><CardPngDownload theme={theme} recipe={featuredCard} side="front" /></figcaption></figure>
               <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Printable 5 by 3 inch back with the Jelly's Lab dog logo and name" /><figcaption><span>BACK / ORIGINAL MARK</span><CardPngDownload theme={theme} recipe={featuredCard} side="back" /></figcaption></figure>

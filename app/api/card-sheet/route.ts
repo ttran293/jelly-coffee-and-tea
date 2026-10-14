@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     return new Response(`Choose 1 to ${MAX_PRINT_CARDS} valid recipe cards.`, { status: 400 });
   }
 
-  const pdf = await cardSheetPdf(recipes as typeof CARD_RECIPES, side, async (recipe, cardSide) => sharp(Buffer.from(cardSvg(theme, recipe, cardSide)), { density: 300 })
+  const pdf = await cardSheetPdf(recipes as typeof CARD_RECIPES, side, async (recipe, cardSide) => sharp(Buffer.from(cardSvg(theme, recipe, cardSide, false, true)), { density: 300 })
     .resize({ width: 1050, height: 600, fit: "fill" })
     .png()
     .toBuffer(), { x: offsetX, y: offsetY });

@@ -1,4 +1,5 @@
 import type { CardRecipe } from "./recipes";
+import { SHEET_CARD_INCHES } from "./artwork";
 import { PDFDocument, PrintScaling, rgb } from "pdf-lib";
 
 export type PrintSheetSide = "front" | "back";
@@ -7,7 +8,7 @@ export type RenderCardSide = (recipe: CardRecipe, side: PrintSheetSide) => Promi
 const POINTS_PER_INCH = 72;
 const POINTS_PER_MM = POINTS_PER_INCH / 25.4;
 const LETTER = { width: 8.5 * POINTS_PER_INCH, height: 11 * POINTS_PER_INCH };
-const layout = { width: 3.5, height: 2, columns: 2, rows: 5 } as const;
+const layout = { ...SHEET_CARD_INCHES, columns: 2, rows: 5 } as const;
 
 export async function cardSheetPdf(recipes: CardRecipe[], side: PrintSheetSide, renderSide: RenderCardSide, backOffsetMm = { x: 0, y: 0 }) {
   const pdf = await PDFDocument.create();
