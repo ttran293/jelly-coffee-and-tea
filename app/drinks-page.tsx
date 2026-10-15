@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { THEME_COOKIE, type CollectionTheme, type ThemeName } from "./theme";
 import { Card3D } from "./card/studio";
-import { HeroCup } from "./hero-cup";
+import { MatchaGarden } from "./matcha-garden";
 import { CARD_SIZE, cardDataUrl } from "./card/artwork";
 import { cardPngDataUrl } from "./card/download";
 import { CARD_RECIPES, FEATURED_CARD_INDEX, MAX_PRINT_CARDS, type CardRecipe } from "./card/recipes";
@@ -472,6 +472,16 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
     if (next) unlockAudio();
   }
 
+  function openNotebookRecipe(recipe: Recipe) {
+    setFilter("All");
+    setSelected(recipe);
+    requestAnimationFrame(() => {
+      const entry = document.getElementById(`drink-${recipe.id}`);
+      entry?.scrollIntoView({ behavior: "smooth", block: "start" });
+      entry?.focus({ preventScroll: true });
+    });
+  }
+
   return <>
     <div className="site-shell" id="top" onPointerDownCapture={() => { if (soundEnabled) unlockAudio(); }} onKeyDownCapture={(event) => { if (soundEnabled && (event.key === "Enter" || event.key === " ")) unlockAudio(); }} onClickCapture={(event) => {
       if (!soundEnabled || !(event.target instanceof Element)) return;
@@ -486,7 +496,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
         <nav className="sidebar-nav" aria-label="Main navigation">{visibleSectionIds.map((id) => <a key={id} href={id === "card" && selectedCardIds.length > 0 ? "#print-selection" : `#${id}`} className={activeSection === id ? "current" : undefined} aria-current={activeSection === id ? "location" : undefined}>{activeSection === id ? "> " : ""}{id === "drinks" ? "coffee/tea" : id}{id === "card" && selectedCardIds.length > 0 && <span className="nav-card-count"> ({selectedCardIds.length})</span>}</a>)}</nav>
         <div className="theme-picker">
           <div className="sidebar-label">COLLECTION / <span>{themes.find((option) => option.id === theme)?.label}</span></div>
-          <div className="theme-options" role="group" aria-label="Recipe collection">{themes.map((option) => <button key={option.id} type="button" className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.name}, ${option.label} theme`} aria-pressed={theme === option.id} title={`${option.name} · ${option.label}`}>
+          <div className="theme-options" role="group" aria-label="Recipe collection">{themes.map((option) => <button key={option.id} type="button" hidden={option.id !== "spring"} className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.name}, ${option.label} theme`} aria-pressed={theme === option.id} title={`${option.name} · ${option.label}`}>
             <span className="theme-swatch" style={{ background: option.id === "spring" ? `linear-gradient(90deg, ${option.colors[0]} 0%, ${option.colors[2]} 50%, ${option.colors[3]} 100%)` : option.colors[0], color: option.colors[1], borderColor: option.colors[1] }}><i style={{ background: option.colors[2] }} /><i style={{ background: option.colors[3] }} /></span><span className="theme-name">{option.name}<small>{option.label}</small></span>
           </button>)}</div>
         </div>
@@ -495,23 +505,39 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
         <div className="sidebar-bottom">{recipeCount} recipes in {themes.find((option) => option.id === theme)?.name}<br />last note: keep experimenting</div>
       </aside>
 
-      <main className="main-content">
-        <div className="path">~/jelly/index.txt</div>
-        <section id="about" className="about about-first" aria-label="About this collection"><div className="about-hero"><div className="about-copy"><span className="section-label">ABOUT.TXT / {themes.find((option) => option.id === theme)?.label.toUpperCase()}</span><h1>{theme === "spring" ? "coffee/tea" : theme === "butter" ? "food log" : "drink log"}<span className="cursor">_</span></h1><p>{theme === "spring" ? "Coffee, tea, and the little extras that make a glass feel special." : theme === "butter" ? "Appetizers, sauces, and food worth making again." : "Cocktails and mocktails for whatever the occasion calls for."}</p><div className="about-ascii" aria-hidden="true">{theme === "spring" ? "[ coffee ] + [ tea ] = ♡" : theme === "butter" ? "[ appetizer ] + [ sauce ] + [ food ]" : "[ cocktail ] + [ mocktail ] = ✦"}</div></div>{theme === "spring" ? <HeroCup /> : <div className="collection-hero-mark" aria-hidden="true"><span>{theme === "butter" ? "✳" : "✦"}</span><small>{theme === "butter" ? "made to share" : "cheers to that"}</small></div>}</div></section>
+      <main className={`main-content${theme === "spring" ? " illustrated-notebook" : ""}`}>
+        <div className="notebook-running-head"><span>JELLY’S LAB / A RECIPE NOTEBOOK</span><span>{theme === "spring" ? "VOL. 01 — COFFEE & TEA" : theme === "butter" ? "VOL. 02 — FOOD" : "VOL. 03 — DRINKS"}</span></div>
+        <section id="about" className="about about-first" aria-label="About this collection">
+          {theme === "spring" ? <>
+            <div className="notebook-intro">
+              <div><span className="section-label">FOR SLOW MORNINGS & LITTLE BREAKS</span><h1>coffee and tea</h1></div>
+              <div className="notebook-intro-note"><span aria-hidden="true">✳</span><p>A collection of things we make, taste, and make again. A little less perfect. A little more homemade.</p></div>
+            </div>
+            <MatchaGarden />
+            <nav className="notebook-contents" aria-label="Inside this notebook">
+              <a href="#drinks"><span>01 / THE DAILY CUP</span><strong>Something to sip <span>↗</span></strong><small>{drinks.length} recipes · matcha, tea & cocoa</small></a>
+              <a href="#toppings"><span>02 / THE FINISHING TOUCH</span><strong>A little extra <span>↗</span></strong><small>{toppings.length} foams, creams & syrups</small></a>
+              <a href="#card"><span>03 / KEEP A COPY</span><strong>For your kitchen <span>↗</span></strong><small>Recipe cards to print & keep</small></a>
+            </nav>
+          </> : <div className="about-hero"><div className="about-copy"><span className="section-label">ABOUT.TXT / {themes.find((option) => option.id === theme)?.label.toUpperCase()}</span><h1>{theme === "butter" ? "food log" : "drink log"}<span className="cursor">_</span></h1><p>{theme === "butter" ? "Appetizers, sauces, and food worth making again." : "Cocktails and mocktails for whatever the occasion calls for."}</p><div className="about-ascii" aria-hidden="true">{theme === "butter" ? "[ appetizer ] + [ sauce ] + [ food ]" : "[ cocktail ] + [ mocktail ] = ✦"}</div></div><div className="collection-hero-mark" aria-hidden="true"><span>{theme === "butter" ? "✳" : "✦"}</span><small>{theme === "butter" ? "made to share" : "cheers to that"}</small></div></div>}
+        </section>
 
         {theme === "spring" && <><section id="drinks" className="recipe-section drink-list" aria-labelledby="drinks-title">
-          <div className="section-heading"><span className="section-label">COFFEE_TEA.TXT</span><h2 id="drinks-title">coffee/tea</h2><p className="testing-line"><span tabIndex={0}>What we are testing.</span></p></div>
-          <div className="list-header"><span>FILE NAME</span><div className="filters" role="group" aria-label="Filter drinks">{(["All", "Tea", "Cocoa"] as const).map((item) => <button type="button" key={item} onClick={() => { setFilter(item); setSelected(null); }} aria-pressed={filter === item}>{item.toLowerCase()}</button>)}</div></div>
+          <div className="section-heading chapter-heading"><span className="chapter-number" aria-hidden="true">01</span><div><span className="section-label">THE DAILY CUP</span><h2 id="drinks-title">Something to sip.</h2><p>Everyday favorites, with room to experiment.</p></div></div>
+          <div className="chapter-body"><aside className="notebook-margin"><span className="section-label">START HERE ↘</span><h3>The everyday<br />matcha.</h3><p>One glass, a few good ingredients, five quiet minutes.</p><button type="button" onClick={() => openNotebookRecipe(drinks[0])}>Make this one ↗</button><div className="margin-ratio" aria-label="Matcha ratio: 1 part matcha, 10 parts water, 30 parts milk"><strong>1 : 10 : 30</strong><span>matcha · water · milk</span></div></aside><div className="chapter-recipes">
+          <div className="list-header"><span>{String(visibleDrinks.length).padStart(2, "0")} RECIPES</span><div className="filters" role="group" aria-label="Filter drinks">{(["All", "Tea", "Cocoa"] as const).map((item) => <button type="button" key={item} onClick={() => { setFilter(item); setSelected(null); }} aria-pressed={filter === item}>{item.toLowerCase()}</button>)}</div></div>
           {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} isPicked={selectedCardIds.includes(drink.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
           <p className="list-note">* recipes change when we make something better</p>
+          </div></div>
         </section>
 
         <section id="toppings" className="recipe-section topping-list" aria-labelledby="toppings-title">
-          <div className="section-heading"><span className="section-label">TOPPINGS.TXT</span><h2 id="toppings-title">toppings</h2><p>The bits we put on top.</p></div>
-          <div className="list-header"><span>FILE NAME</span><span>{toppings.length} {toppings.length === 1 ? "FILE" : "FILES"}</span></div>
-          <div className="topping-scroll" role="region" aria-label="Topping recipes, scroll for more" tabIndex={0}>
+          <div className="section-heading chapter-heading"><span className="chapter-number" aria-hidden="true">02</span><div><span className="section-label">THE FINISHING TOUCH</span><h2 id="toppings-title">A little extra.</h2><p>A soft cloud of cream. A spoonful of something sweet.</p></div></div>
+          <div className="chapter-body"><aside className="notebook-margin"><span className="section-label">A NOTE IN THE MARGIN</span><h3>Mix, match,<br />make it yours.</h3><p>Try lemon syrup in a cold tea or pour it beneath a layer of matcha.</p><button type="button" onClick={() => openNotebookRecipe(toppings[3])}>Start with lemon ↗</button><span className="margin-flower" aria-hidden="true">✳</span></aside><div className="chapter-recipes">
+          <div className="list-header"><span>FOAMS / CREAMS / SYRUPS</span><span>{String(toppings.length).padStart(2, "0")} RECIPES</span></div>
+          <div className="topping-recipes">
             {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} isPicked={selectedCardIds.includes(topping.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
-          </div>
+          </div></div></div>
         </section></>}
         {visibleExtraSections.map((section) => <section key={section.id} id={section.id} className="recipe-section" aria-labelledby={`${section.id}-title`}>
           <div className="section-heading"><span className="section-label">{section.title.toUpperCase()}.TXT</span><h2 id={`${section.id}-title`}>{section.title}</h2><p>{section.description}</p></div>
@@ -519,7 +545,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
           {section.recipes.map((recipe) => <RecipeEntry key={recipe.id} recipe={recipe} isOpen={selected?.id === recipe.id} onSelect={setSelected} isPicked={selectedCardIds.includes(recipe.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
         </section>)}
         <section id="card" className="recipe-section home-card" aria-labelledby="card-title">
-          <div className="section-heading"><span className="section-label">CARD.TXT</span><h2 id="card-title">the little card</h2><p>Print it, punch it, save for later.</p></div>
+          <div className={`section-heading${theme === "spring" ? " chapter-heading" : ""}`}>{theme === "spring" && <span className="chapter-number" aria-hidden="true">03</span>}<div><span className="section-label">{theme === "spring" ? "FROM THE NOTEBOOK TO YOUR KITCHEN" : "CARD.TXT"}</span><h2 id="card-title">A recipe to keep.</h2><p>Print it, punch it, save for later.</p></div></div>
           <Card3D theme={theme} recipes={studioCards} featuredIndex={featuredIndex} />
           <div className="home-card-print">
             <h3>print the card</h3>
