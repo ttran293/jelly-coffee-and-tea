@@ -77,7 +77,7 @@ export function Card3D({ theme, recipes, featuredIndex }: { theme: ThemeName; re
     const stack = new THREE.Group();
     stack.position.y = 0.08;
     scene.add(stack);
-    const palette = cardPalette(theme);
+    const palette = cardPalette();
     const loader = new THREE.TextureLoader();
     const textures: THREE.Texture[] = [];
     const loadArt = (recipeIndex: number, side: "front" | "back") => {
@@ -99,7 +99,7 @@ export function Card3D({ theme, recipes, featuredIndex }: { theme: ThemeName; re
 
       const body = new THREE.Mesh(
         new THREE.ExtrudeGeometry(frontShape, { depth: 0.012, bevelEnabled: false, curveSegments: 32 }),
-        new THREE.MeshStandardMaterial({ color: palette.accent, roughness: 0.9 }),
+        new THREE.MeshStandardMaterial({ color: palette.paper, roughness: 0.9 }),
       );
       body.position.set(-holeX, -holeY, -0.006);
       group.add(body);

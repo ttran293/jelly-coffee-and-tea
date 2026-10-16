@@ -16,28 +16,17 @@ const sheetHole = {
   radiusY: CARD_SIZE.height * 0.125 / SHEET_CARD_INCHES.height,
 } as const;
 
-const palettes: Record<ThemeName, { paper: string; ink: string; accent: string; smallInk?: string; muted: string; line: string }> = {
-  butter: { paper: "#f4ebcf", ink: "#292c3e", accent: "#ae3854", muted: "#646470", line: "#b9ad9b" },
-  blueberry: { paper: "#232841", ink: "#fbf3e5", accent: "#a8d9f0", muted: "#b9c4d8", line: "#68728d" },
-  cherry: { paper: "#40252e", ink: "#fff1df", accent: "#ffb49d", muted: "#d8bdb7", line: "#93636c" },
-  lilac: { paper: "#dedaf0", ink: "#302d4a", accent: "#6852af", muted: "#67627a", line: "#a19abf" },
-  cloud: { paper: "#fffdf6", ink: "#263b5c", accent: "#5677a7", muted: "#526985", line: "#8fa9cc" },
-  blush: { paper: "#fffdfb", ink: "#263b5c", accent: "#a85f7c", muted: "#65718a", line: "#bd9aaf" },
-  spring: { paper: "#fcfff9", ink: "#263b5c", accent: "#6478aa", smallInk: "#405781", muted: "#5c7180", line: "#a3b6c8" },
-  nightfall: { paper: "#ffcee3", ink: "#262277", accent: "#395898", muted: "#596181", line: "#a89fbf" },
-  peach: { paper: "#ffe28d", ink: "#13193d", accent: "#624664", muted: "#726278", line: "#ae8b85" },
-  tidal: { paper: "#f9d2e4", ink: "#124d57", accent: "#007e79", muted: "#526d70", line: "#9eabb6" },
-  garden: { paper: "#fedfcb", ink: "#254b27", accent: "#106816", muted: "#5c6850", line: "#a9a98b" },
-};
+// Share white paper and the original blue inks across previews and downloads.
+const printPalette = { paper: "#ffffff", ink: "#263b5c", accent: "#6478aa", smallInk: "#405781", muted: "#5c7180", line: "#a3b6c8" };
 
-export function cardPalette(theme: ThemeName) {
-  return palettes[theme];
+export function cardPalette() {
+  return printPalette;
 }
 
 const xml = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
-export function cardSvg(theme: ThemeName, recipe: CardRecipe, side: CardSide, texture = false, sheet = false) {
-  const color = palettes[theme];
+export function cardSvg(_theme: ThemeName, recipe: CardRecipe, side: CardSide, texture = false, sheet = false) {
+  const color = cardPalette();
   const smallInk = color.smallInk ?? color.accent;
   const size = texture ? 'width="1680" height="1008"' : 'width="5in" height="3in"';
   const insetX = sheet ? sheetHole.insetX : CARD_SIZE.holeInset;

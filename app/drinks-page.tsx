@@ -66,7 +66,7 @@ function CardSheetDownload({ theme, selectedIds, onDuplicate, onRemove, onClear 
   }
 
   return <div id="print-selection" className="card-sheet-download">
-    <p>Add recipes as you browse. Use duplicate to print extra copies, then download separate front and back PDFs for single-sided cardstock.</p>
+    <p>Add recipes as you browse. Use duplicate to print extra copies, then download separate front and back PDFs for single-sided cardstock. PDF cards use blue ink on a white background.</p>
     <div className="card-sheet-review" aria-live="polite">
       <div className="card-sheet-review-head"><span>SELECTED {String(selectedIds.length).padStart(2, "0")} / {MAX_PRINT_CARDS}</span>{selectedIds.length > 0 && <button type="button" onClick={onClear}>clear all</button>}</div>
       {selectedIds.length === 0 ? <p>No recipes selected yet. Open a recipe and choose “add to print”.</p> : <ol>{[...quantities].map(([id, quantity]) => { const recipe = CARD_RECIPES.find((card) => card.id === id); return recipe && <li key={id}><span className="card-sheet-recipe-name">{recipe.title}{quantity > 1 && <strong>x{quantity}</strong>}</span><div className="card-sheet-review-actions"><button type="button" onClick={() => onDuplicate(id)} disabled={selectedIds.length >= MAX_PRINT_CARDS} aria-label={`Add another copy of ${recipe.title}`}>duplicate +</button><button type="button" onClick={() => onRemove(id)} aria-label={`Remove one copy of ${recipe.title}`}>remove ×</button></div></li>; })}</ol>}
@@ -560,7 +560,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
                 <li><strong>Feed:</strong> Use a manual or straight paper path if available; feed one cardstock sheet at a time</li>
               </ul>
             </div>
-            <p className="home-card-print-note">Individual 5 × 3 in artwork · 1500 × 900 px PNG · {themes.find((option) => option.id === theme)?.label} colors · ¼ in punch guide</p>
+            <p className="home-card-print-note">Individual 5 × 3 in artwork · 1500 × 900 px PNG · blue ink on white · ¼ in punch guide</p>
             <div className="flat-grid">
               <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Printable 5 by 3 inch recipe front for ${featuredCard.title} with a small dog logo`} /><figcaption><span>FRONT / RECIPE {featuredCard.number}</span><CardPngDownload theme={theme} recipe={featuredCard} side="front" /></figcaption></figure>
               <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Printable 5 by 3 inch back with the Jelly's Lab dog logo and name" /><figcaption><span>BACK / ORIGINAL MARK</span><CardPngDownload theme={theme} recipe={featuredCard} side="back" /></figcaption></figure>
