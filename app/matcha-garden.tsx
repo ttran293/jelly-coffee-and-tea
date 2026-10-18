@@ -11,8 +11,9 @@ type Box = [number, number, number, number];
 type Shape = { d: string; color: string; tone: number; line?: boolean; solid?: boolean; width?: number };
 type Part = { id: string; name: string; box: Box; shapes: Shape[]; group: string; pivot: Point; amplitude: number; transform?: { scale: number; x: number; y: number } };
 type Bloom = { x: number; y: number; start: number; radius: number };
-type RenderPart = Part & { paths: Path2D[]; mask: HTMLCanvasElement; grey: HTMLCanvasElement; painted: HTMLCanvasElement; reveal: HTMLCanvasElement; bloom?: Bloom; done: boolean; angle: number; hover: number };
-type Engine = { paint: (id: string) => void; focus: (id: string | null) => void; reset: () => void };
+type AutoReveal = { start: number; duration: number; mode: "rise" | "bloom" | "fall" };
+type RenderPart = Part & { paths: Path2D[]; mask: HTMLCanvasElement; grey: HTMLCanvasElement; painted: HTMLCanvasElement; reveal: HTMLCanvasElement; bloom?: Bloom; auto?: AutoReveal; done: boolean; angle: number; hover: number };
+type Engine = { paint: (id: string) => void; focus: (id: string | null) => void; reset: () => void; animate: () => void };
 
 const shape = (d: string, color: string, tone = 0.14): Shape => ({ d, color, tone });
 const line = (d: string, width = 1.1): Shape => ({ d, color: INK, tone: 0.85, line: true, width });
@@ -63,10 +64,6 @@ function plant(id: string, x: number, top: number, flower: Flower, trailing = fa
 
 // Paths stay as data until the browser mounts; no canvas APIs run during SSR.
 const CUP_PARTS: Part[] = [
-  { id: "straw", name: "the straw", box: [512, 61, 47, 105], group: "cup", pivot: { x: 502, y: 274 }, amplitude: 0.004, shapes: [
-    shape("M514 160L529 72Q531 63 538 66L554 72L552 79L537 74L522 161Z", "#678551", 0.3),
-    line("M533 72L519 153", 0.65),
-  ] },
   { id: "glass", name: "the glass", box: [440, 126, 123, 155], group: "cup", pivot: { x: 502, y: 274 }, amplitude: 0.004, shapes: [
     shape("M444 140L456 263Q457 277 501 278Q542 277 545 263L557 140Z", "#d8e8df", 0.055),
     line("M448 153L459 260Q460 270 481 271M553 154L542 258Q541 267 531 270", 0.6),
@@ -151,6 +148,12 @@ const PARTS: Part[] = [
     shape(leaf(424, 384, 12, -3, 4), "#ac97c7", 0.12),
     shape(leaf(516, 378, -14, -6, 5), "#e5ac7f", 0.12),
   ] },
+];
+
+// Crops from the shared fallen-petal layer let each petal drift down at its own pace.
+const PETAL_BOXES: Box[] = [
+  [279, 359, 34, 29], [313, 362, 21, 17], [469, 358, 36, 31],
+  [244, 367, 29, 24], [339, 377, 31, 18], [415, 374, 27, 19], [500, 365, 26, 24],
 ];
 
 function surface(width: number, height: number) {
@@ -257,6 +260,8 @@ export function MatchaGarden() {
   const stageRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<Engine | null>(null);
   const [painted, setPainted] = useState<string[]>([]);
+  const [playing, setPlaying] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -276,6 +281,7 @@ export function MatchaGarden() {
     let focused: string | null = null;
     let active: string | null = null;
     let ripples: { start: number; color: string }[] = [];
+    let animationEnd = 0;
 
     const requestDraw = () => { if (!frame && visible && !document.hidden) frame = requestAnimationFrame(draw); };
     const setActive = (id: string | null) => {
@@ -297,6 +303,7 @@ export function MatchaGarden() {
       return null;
     };
     const paintPart = (part: RenderPart, point: Point) => {
+      if (animationEnd) return;
       if (part.done || part.bloom) { requestDraw(); return; }
       const [x, y, w, h] = part.box;
       const radius = Math.max(...[[x, y], [x + w, y], [x, y + h], [x + w, y + h]].map(([cx, cy]) => Math.hypot(cx - point.x, cy - point.y))) * 1.3;
@@ -333,6 +340,12 @@ export function MatchaGarden() {
     function draw(time: number) {
       frame = 0;
       if (!context || !width || !height) return;
+      if (animationEnd && time >= animationEnd) {
+        animationEnd = 0;
+        for (const part of parts) { part.done = true; part.auto = undefined; }
+        setPainted(PARTS.map((part) => part.id));
+        setPlaying(false);
+      }
       const dt = Math.min(0.05, lastTime ? (time - lastTime) / 1000 : 1 / 60);
       lastTime = time;
       context.setTransform(dpr * width / WIDTH, 0, 0, dpr * height / HEIGHT, 0, 0);
@@ -362,8 +375,41 @@ export function MatchaGarden() {
         context.globalCompositeOperation = "destination-out";
         context.drawImage(part.mask, x, y, w, h);
         context.globalCompositeOperation = "source-over";
-        context.drawImage(part.done ? part.painted : part.grey, x, y, w, h);
+        if (part.done) context.drawImage(part.painted, x, y, w, h);
+        else if (part.auto?.mode !== "fall") context.drawImage(part.grey, x, y, w, h);
         if (part.bloom) context.drawImage(part.reveal, x, y, w, h);
+        if (part.auto) {
+          const progress = Math.max(0, Math.min(1, (time - part.auto.start) / part.auto.duration));
+          if (progress > 0) {
+            if (part.auto.mode === "rise") {
+              const lift = h * (1 - progress);
+              context.save();
+              context.beginPath();
+              context.rect(x, y + lift, w, h - lift);
+              context.clip();
+              context.drawImage(part.painted, x, y, w, h);
+              context.restore();
+            } else if (part.auto.mode === "bloom") {
+              context.save();
+              context.beginPath();
+              context.arc(x + w / 2, y + h / 2, Math.hypot(w, h) * progress * 0.7, 0, TAU);
+              context.clip();
+              context.drawImage(part.painted, x, y, w, h);
+              context.restore();
+            } else {
+              PETAL_BOXES.forEach(([px, py, pw, ph], index) => {
+                const petalProgress = Math.max(0, Math.min(1, (progress - index * 0.065) / (1 - index * 0.065)));
+                if (!petalProgress) return;
+                const eased = 1 - Math.pow(1 - petalProgress, 3);
+                const sway = Math.sin(petalProgress * 9 + index * 2) * 10 * (1 - eased);
+                context.save();
+                context.globalAlpha = Math.min(1, petalProgress * 4);
+                context.drawImage(part.painted, (px - x) * 2, (py - y) * 2, pw * 2, ph * 2, px + sway, py - 190 * (1 - eased), pw, ph);
+                context.restore();
+              });
+            }
+          }
+        }
         if (focused === part.id) {
           context.strokeStyle = "#798b62";
           context.lineWidth = 1;
@@ -401,6 +447,7 @@ export function MatchaGarden() {
     };
     const onLeave = () => { pointer = null; setActive(null); requestDraw(); };
     const onClick = (event: MouseEvent) => {
+      if (animationEnd) return;
       const target = hit(locate(event));
       if (target) paintPart(target.part, target.point);
     };
@@ -438,8 +485,47 @@ export function MatchaGarden() {
         if (part) { const [x, y, w, h] = part.box; paintPart(part, { x: x + w / 2, y: y + h / 2 }); }
       },
       focus: (id) => { focused = id; setActive(id); requestDraw(); },
-      reset: () => { for (const part of parts) { part.done = false; part.bloom = undefined; } ripples = []; setPainted([]); requestDraw(); },
+      reset: () => {
+        animationEnd = 0;
+        for (const part of parts) { part.done = false; part.bloom = undefined; part.auto = undefined; }
+        ripples = [];
+        setPainted([]);
+        setPlaying(false);
+        requestDraw();
+      },
+      animate: () => {
+        animationEnd = 0;
+        ripples = [];
+        for (const part of parts) { part.done = false; part.bloom = undefined; part.auto = undefined; }
+        setPainted([]);
+        if (motion.matches) {
+          for (const part of parts) part.done = true;
+          setPainted(PARTS.map((part) => part.id));
+          setPlaying(false);
+          requestDraw();
+          return;
+        }
+        const start = performance.now();
+        const cupOrder = ["glass", "milk", "label", "matcha", "ice", "rim"];
+        cupOrder.forEach((id, index) => {
+          const part = parts.find((item) => item.id === id);
+          if (part) part.auto = { start: start + index * 140, duration: 720, mode: "rise" };
+        });
+        const stems = parts.filter((part) => part.group !== "cup" && part.group !== "petals" && !part.id.endsWith("-flower"));
+        stems.forEach((stem, index) => {
+          const stemStart = start + 1300 + index * 45;
+          stem.auto = { start: stemStart, duration: 1500, mode: "rise" };
+          const flower = parts.find((part) => part.id === `${stem.id}-flower`);
+          if (flower) flower.auto = { start: stemStart + 1050, duration: 750, mode: "bloom" };
+        });
+        const petals = parts.find((part) => part.id === "fallen-petals");
+        if (petals) petals.auto = { start: start + 4250, duration: 900, mode: "fall" };
+        animationEnd = start + 5200;
+        setPlaying(true);
+        requestDraw();
+      },
     };
+    setReady(true);
     resize();
     return () => {
       engineRef.current = null;
@@ -458,10 +544,10 @@ export function MatchaGarden() {
     <div className="matcha-garden__stage" ref={stageRef}>
       <canvas ref={canvasRef} aria-hidden="true" />
       <div className="matcha-garden__targets" role="group" aria-label="Paint individual parts of the illustration">
-        {PARTS.map((part) => <button key={part.id} type="button" className="matcha-garden__target" style={{ left: `${(part.box[0] + part.box[2] / 2) / WIDTH * 100}%`, top: `${(part.box[1] + part.box[3] / 2) / HEIGHT * 100}%` }} aria-label={`Paint ${part.name}`} aria-pressed={painted.includes(part.id)} onFocus={() => engineRef.current?.focus(part.id)} onBlur={() => engineRef.current?.focus(null)} onClick={() => engineRef.current?.paint(part.id)}><span aria-hidden="true">+</span></button>)}
+        {PARTS.map((part) => <button key={part.id} type="button" className="matcha-garden__target" style={{ left: `${(part.box[0] + part.box[2] / 2) / WIDTH * 100}%`, top: `${(part.box[1] + part.box[3] / 2) / HEIGHT * 100}%` }} aria-label={`Paint ${part.name}`} aria-pressed={painted.includes(part.id)} disabled={playing} onFocus={() => engineRef.current?.focus(part.id)} onBlur={() => engineRef.current?.focus(null)} onClick={() => engineRef.current?.paint(part.id)}><span aria-hidden="true">+</span></button>)}
       </div>
     </div>
-    <figcaption className="matcha-garden__caption"><button type="button" onClick={() => engineRef.current?.reset()} disabled={!painted.length}>start over ↺</button></figcaption>
-    <span className="matcha-garden__status" aria-live="polite">{painted.length ? `${painted.length} ${painted.length === 1 ? "part" : "parts"} painted. Each part keeps its own color.` : "An unpainted ink drawing. Tab to a part and press Enter to paint it."}</span>
+    <figcaption className="matcha-garden__caption"><button type="button" onClick={() => { stageRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "center" }); engineRef.current?.animate(); }} disabled={!ready || playing}>{playing ? "blooming…" : "watch it bloom ↗"}</button><button type="button" onClick={() => engineRef.current?.reset()} disabled={!painted.length && !playing}>start over ↺</button></figcaption>
+    <span className="matcha-garden__status" aria-live="polite">{playing ? "Ink is rising from the cup into the flowers, then petals fall." : painted.length ? `${painted.length} ${painted.length === 1 ? "part" : "parts"} painted. Each part keeps its own color.` : "An unpainted ink drawing. Tab to a part and press Enter to paint it, or watch it bloom."}</span>
   </figure>;
 }

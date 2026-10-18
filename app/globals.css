@@ -193,8 +193,9 @@ h1 { font: 400 clamp(64px, 7.2vw, 102px)/.85 "Handjet", monospace; letter-spacin
 .matcha-garden__targets { position: absolute; top: 0; left: calc(-100% * var(--garden-view-left) / var(--garden-view-width)); width: calc(100% * 720 / var(--garden-view-width)); height: 100%; pointer-events: none; }
 .matcha-garden__target { position: absolute; width: 26px; height: 26px; transform: translate(-50%, -50%); opacity: 0; border: 1px solid #63764f; border-radius: 50%; background: #f8faf3; color: #424a40; font: 18px/1 "IBM Plex Mono", monospace; pointer-events: none; }
 .matcha-garden__target:focus-visible { opacity: 1; outline: 2px solid #63764f; outline-offset: 3px; }
-.matcha-garden__caption { display: flex; justify-content: flex-end; padding: 12px 0 0; color: var(--soft-ink); font-size: 12px; line-height: 1.5; }
-.matcha-garden__caption button { padding: 4px 0 4px 10px; flex-shrink: 0; border: 0; background: none; color: var(--muted-ink); font: inherit; }
+.matcha-garden__caption { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px 18px; padding: 12px 0 0; color: var(--soft-ink); font-size: 12px; line-height: 1.5; }
+.matcha-garden__caption button { padding: 4px 0; flex-shrink: 0; border: 0; background: none; color: var(--muted-ink); font: inherit; }
+.matcha-garden__caption button:first-child { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
 .matcha-garden__caption button:hover:not(:disabled) { color: var(--accent-ink); }
 .matcha-garden__caption button:disabled { opacity: .45; cursor: default; }
 .matcha-garden__caption button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
