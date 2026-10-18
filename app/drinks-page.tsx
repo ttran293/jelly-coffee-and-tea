@@ -6,87 +6,9 @@ import { THEME_COOKIE, type CollectionTheme, type ThemeName } from "./theme";
 import { Card3D } from "./card/studio";
 import { MatchaGarden } from "./matcha-garden";
 import { CARD_SIZE, cardDataUrl } from "./card/artwork";
-import { cardPngDataUrl } from "./card/download";
-import { CARD_RECIPES, FEATURED_CARD_INDEX, MAX_PRINT_CARDS, type CardRecipe } from "./card/recipes";
+import { CARD_RECIPES, FEATURED_CARD_INDEX, type CardRecipe } from "./card/recipes";
 import { playMenu, playPaper, playTheme, setAudioEnabled, unlockAudio } from "./sound";
 
-function CardPngDownload({ theme, recipe, side }: { theme: ThemeName; recipe: CardRecipe; side: "front" | "back" }) {
-  const [png, setPng] = useState<{ theme: ThemeName; recipeId: string; side: "front" | "back"; url: string } | null>(null);
-  const url = png?.theme === theme && png.recipeId === recipe.id && png.side === side ? png.url : undefined;
-
-  useEffect(() => {
-    let active = true;
-    void cardPngDataUrl(theme, recipe, side).then((dataUrl) => {
-      if (active) setPng({ theme, recipeId: recipe.id, side, url: dataUrl });
-    }).catch(() => {
-      if (active) setPng({ theme, recipeId: recipe.id, side, url: "" });
-    });
-    return () => { active = false; };
-  }, [theme, recipe, side]);
-
-  const failed = png?.theme === theme && png.recipeId === recipe.id && png.side === side && png.url === "";
-  return <a href={url || undefined} download={`jellys-lab-${theme}-${recipe.id}-${side}.png`} aria-disabled={!url}>{url ? "download PNG ↓" : failed ? "PNG unavailable" : "preparing PNG…"}</a>;
-}
-
-function CardSheetDownload({ theme, selectedIds, onDuplicate, onRemove, onClear }: { theme: ThemeName; selectedIds: string[]; onDuplicate: (id: string) => void; onRemove: (id: string) => void; onClear: () => void }) {
-  const [backOffsetX, setBackOffsetX] = useState(0);
-  const [backOffsetY, setBackOffsetY] = useState(0);
-  const [preparing, setPreparing] = useState<"front" | "back" | null>(null);
-  const [printError, setPrintError] = useState("");
-  const offsetOptions = Array.from({ length: 21 }, (_, index) => (index - 10) / 2);
-  const quantities = new Map<string, number>();
-  selectedIds.forEach((id) => quantities.set(id, (quantities.get(id) ?? 0) + 1));
-
-  async function downloadSheet(side: "front" | "back") {
-    if (!selectedIds.length || preparing) return;
-    setPreparing(side);
-    setPrintError("");
-    try {
-      const { cardSheetPdf } = await import("./card/print-sheet");
-      const recipes = selectedIds.map((id) => CARD_RECIPES.find((recipe) => recipe.id === id));
-      if (recipes.some((recipe) => !recipe)) throw new Error("A selected recipe is unavailable.");
-      const pdf = await cardSheetPdf(recipes as CardRecipe[], side, async (recipe, cardSide) => {
-        const png = await cardPngDataUrl(theme, recipe, cardSide, true);
-        const bytes = atob(png.slice(png.indexOf(",") + 1));
-        return Uint8Array.from(bytes, (character) => character.charCodeAt(0));
-      }, { x: backOffsetX, y: backOffsetY });
-      const url = URL.createObjectURL(new Blob([new Uint8Array(pdf)], { type: "application/pdf" }));
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `jellys-lab-${selectedIds.length}-cards-${side}.pdf`;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch {
-      setPrintError("Could not prepare the PDF. Please try again.");
-    } finally {
-      setPreparing(null);
-    }
-  }
-
-  return <div id="print-selection" className="card-sheet-download">
-    <p>Add recipes as you browse. Use duplicate to print extra copies, then download separate front and back PDFs for single-sided cardstock. PDF cards use blue ink on a white background.</p>
-    <div className="card-sheet-review" aria-live="polite">
-      <div className="card-sheet-review-head"><span>SELECTED {String(selectedIds.length).padStart(2, "0")} / {MAX_PRINT_CARDS}</span>{selectedIds.length > 0 && <button type="button" onClick={onClear}>clear all</button>}</div>
-      {selectedIds.length === 0 ? <p>No recipes selected yet. Open a recipe and choose “add to print”.</p> : <ol>{[...quantities].map(([id, quantity]) => { const recipe = CARD_RECIPES.find((card) => card.id === id); return recipe && <li key={id}><span className="card-sheet-recipe-name">{recipe.title}{quantity > 1 && <strong>x{quantity}</strong>}</span><div className="card-sheet-review-actions"><button type="button" onClick={() => onDuplicate(id)} disabled={selectedIds.length >= MAX_PRINT_CARDS} aria-label={`Add another copy of ${recipe.title}`}>duplicate +</button><button type="button" onClick={() => onRemove(id)} aria-label={`Remove one copy of ${recipe.title}`}>remove ×</button></div></li>; })}</ol>}
-    </div>
-    {selectedIds.length > 0 && <p className="card-sheet-count">{selectedIds.length} {selectedIds.length === 1 ? "card" : "cards"} · 1 sheet per PDF</p>}
-    <div className="card-sheet-buttons">
-      <button type="button" disabled={!selectedIds.length || preparing !== null} onClick={() => void downloadSheet("front")}>{preparing === "front" ? "preparing fronts PDF…" : "download fronts PDF ↓"}<small>3.5 × 2 in · up to 10 per Letter sheet</small></button>
-      <button type="button" disabled={!selectedIds.length || preparing !== null} onClick={() => void downloadSheet("back")}>{preparing === "back" ? "preparing backs PDF…" : "download backs PDF ↓"}<small>3.5 × 2 in · same card count</small></button>
-    </div>
-    {printError && <p className="card-sheet-error" role="alert">{printError}</p>}
-    <fieldset className="card-back-alignment">
-      <legend>back alignment / mm</legend>
-      <div className="card-back-alignment-controls">
-        <label>Left / right <select value={backOffsetX} onChange={(event) => setBackOffsetX(Number(event.target.value))}>{offsetOptions.map((offset) => <option key={offset} value={offset}>{offset > 0 ? `+${offset}` : offset}</option>)}</select></label>
-        <label>Up / down <select value={backOffsetY} onChange={(event) => setBackOffsetY(Number(event.target.value))}>{offsetOptions.map((offset) => <option key={offset} value={offset}>{offset > 0 ? `+${offset}` : offset}</option>)}</select></label>
-      </div>
-      <p>Use this for a consistent shift on every back. Negative moves left or up; positive moves right or down. Test one sheet at 100% size.</p>
-    </fieldset>
-  </div>;
-}
 type SectionId = "about" | "drinks" | "toppings" | "appetizers" | "sauces" | "food" | "cocktails" | "mocktails" | "card";
 const collectionSectionIds: Record<CollectionTheme, SectionId[]> = {
   spring: ["about", "drinks", "toppings", "card"],
@@ -332,7 +254,7 @@ const mocktails: Recipe[] = [
   },
 ];
 
-// The decorative 3D stack is a small preview; every recipe stays available in the notebook and print list.
+// The decorative 3D stack is a small preview; every recipe stays available in the notebook.
 const MAX_STACK_CARDS = 3;
 const collectionCards: Record<CollectionTheme, CardRecipe[]> = {
   spring: CARD_RECIPES.filter((card) => [...drinks, ...toppings].some((recipe) => recipe.id === card.id)).slice(0, MAX_STACK_CARDS),
@@ -353,7 +275,7 @@ const cocktailSections = [
 
 let visitRequest: Promise<number | null> | null = null;
 
-function RecipeEntry({ recipe, isOpen, onSelect, isPicked, printIsFull, onTogglePrint }: { recipe: Recipe; isOpen: boolean; onSelect: (recipe: Recipe | null) => void; isPicked?: boolean; printIsFull?: boolean; onTogglePrint?: (id: string) => void }) {
+function RecipeEntry({ recipe, isOpen, onSelect }: { recipe: Recipe; isOpen: boolean; onSelect: (recipe: Recipe | null) => void }) {
   return <div className="drink-entry">
     <button id={`drink-${recipe.id}`} type="button" className="drink-row" onClick={() => onSelect(isOpen ? null : recipe)} aria-expanded={isOpen} aria-controls={`recipe-${recipe.id}`} aria-label={`${isOpen ? "Hide" : "Read"} ${recipe.name} recipe`}>
       <span className="drink-number">{recipe.number} /</span><span className="drink-info"><strong>{recipe.name}</strong><small>{recipe.description}</small></span><span className="drink-kind">{(recipe.typeLabel ?? recipe.kind).toUpperCase()}</span><span className="row-arrow" aria-hidden="true">{isOpen ? "−" : "+"}</span>
@@ -364,7 +286,6 @@ function RecipeEntry({ recipe, isOpen, onSelect, isPicked, printIsFull, onToggle
       <div className="recipe-columns"><section><h3>What you&apos;ll need</h3>{recipe.ingredientGroups?.map((group) => <div className="recipe-ingredient-group" key={group.title}><h4>{group.title}</h4><ul>{group.items.map((item) => <li key={item}>{item}</li>)}</ul></div>)}{recipe.ingredients.length > 0 && <ul className={recipe.ingredientGroups ? "recipe-extra-ingredients" : undefined}>{recipe.ingredients.map((item) => <li key={item}>{item}</li>)}</ul>}</section><section><h3>Make it</h3><ol>{recipe.method.map((step) => <li key={step}>{step}</li>)}</ol></section></div>
       {recipe.note && <p className="lab-note"><strong>Note:</strong> {recipe.note}</p>}
       {recipe.variations && <div className="lab-note"><strong>Notes / variations</strong><ul>{recipe.variations.map((item) => <li key={item}>{item}</li>)}</ul></div>}
-      {onTogglePrint && <div className="recipe-print-action"><button type="button" aria-pressed={isPicked} disabled={printIsFull && !isPicked} onClick={() => onTogglePrint(recipe.id)}>{isPicked ? "✓ added to print · remove" : printIsFull ? "print list full" : "+ add this recipe to print"}</button>{isPicked && <a href="#print-selection">view print selection ↓</a>}</div>}
     </article>}
   </div>;
 }
@@ -373,42 +294,16 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
   const [theme, setTheme] = useState<CollectionTheme>(initialTheme);
   const [filter, setFilter] = useState<"All" | "Tea" | "Cocoa">("All");
   const [selected, setSelected] = useState<Recipe | null>(null);
-  const [selectedCardsByTheme, setSelectedCardsByTheme] = useState<Record<CollectionTheme, string[]>>({ spring: [], butter: [], blueberry: [] });
   const [visitCount, setVisitCount] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState<SectionId>("about");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const visibleDrinks = drinks.filter((drink) => filter === "All" || drink.kind === filter);
-  const selectedCardIds = selectedCardsByTheme[theme];
   const studioCards = collectionCards[theme];
   const featuredIndex = theme === "spring" ? FEATURED_CARD_INDEX : 0;
   const featuredCard = studioCards[featuredIndex];
   const visibleSectionIds = collectionSectionIds[theme];
   const visibleExtraSections = theme === "butter" ? foodSections : theme === "blueberry" ? cocktailSections : [];
   const recipeCount = theme === "spring" ? drinks.length + toppings.length : theme === "butter" ? appetizers.length + sauces.length + food.length : cocktails.length + mocktails.length;
-
-  function updateSelectedCards(update: (current: string[]) => string[]) {
-    setSelectedCardsByTheme((current) => ({ ...current, [theme]: update(current[theme]) }));
-  }
-
-  function togglePrintRecipe(id: string) {
-    updateSelectedCards((current) => current.includes(id) ? current.filter((selectedId) => selectedId !== id) : current.length < MAX_PRINT_CARDS ? [...current, id] : current);
-  }
-
-  function duplicatePrintRecipe(id: string) {
-    updateSelectedCards((current) => {
-      const index = current.lastIndexOf(id);
-      return current.length >= MAX_PRINT_CARDS || index === -1
-        ? current
-        : [...current.slice(0, index + 1), id, ...current.slice(index + 1)];
-    });
-  }
-
-  function removePrintRecipe(id: string) {
-    updateSelectedCards((current) => {
-      const index = current.lastIndexOf(id);
-      return index === -1 ? current : current.filter((_, cardIndex) => cardIndex !== index);
-    });
-  }
 
   useEffect(() => {
     const updateSection = () => {
@@ -472,15 +367,6 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
     if (next) unlockAudio();
   }
 
-  function openNotebookRecipe(recipe: Recipe) {
-    setFilter("All");
-    setSelected(recipe);
-    requestAnimationFrame(() => {
-      const entry = document.getElementById(`drink-${recipe.id}`);
-      entry?.scrollIntoView({ behavior: "smooth", block: "start" });
-      entry?.focus({ preventScroll: true });
-    });
-  }
 
   return <>
     <div className="site-shell" id="top" onPointerDownCapture={() => { if (soundEnabled) unlockAudio(); }} onKeyDownCapture={(event) => { if (soundEnabled && (event.key === "Enter" || event.key === " ")) unlockAudio(); }} onClickCapture={(event) => {
@@ -493,7 +379,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
     }}>
       <aside className="sidebar">
         <div className="identity"><div className="dog-kaomoji" aria-hidden="true"><span>U・ᴥ・U</span><small>~ woof ~</small></div><a href="#top" className="site-name">jelly&apos;s lab</a></div>
-        <nav className="sidebar-nav" aria-label="Main navigation">{visibleSectionIds.map((id) => <a key={id} href={id === "card" && selectedCardIds.length > 0 ? "#print-selection" : `#${id}`} className={activeSection === id ? "current" : undefined} aria-current={activeSection === id ? "location" : undefined}>{activeSection === id ? "> " : ""}{id === "drinks" ? "coffee/tea" : id}{id === "card" && selectedCardIds.length > 0 && <span className="nav-card-count"> ({selectedCardIds.length})</span>}</a>)}</nav>
+        <nav className="sidebar-nav" aria-label="Main navigation">{visibleSectionIds.map((id) => <a key={id} href={`#${id}`} className={activeSection === id ? "current" : undefined} aria-current={activeSection === id ? "location" : undefined}>{activeSection === id ? "> " : ""}{id === "drinks" ? "coffee/tea" : id}</a>)}</nav>
         <div className="theme-picker">
           <div className="sidebar-label">COLLECTION / <span>{themes.find((option) => option.id === theme)?.label}</span></div>
           <div className="theme-options" role="group" aria-label="Recipe collection">{themes.map((option) => <button key={option.id} type="button" hidden={option.id !== "spring"} className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.name}, ${option.label} theme`} aria-pressed={theme === option.id} title={`${option.name} · ${option.label}`}>
@@ -517,55 +403,41 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
             <nav className="notebook-contents" aria-label="Inside this notebook">
               <a href="#drinks"><span>01 / THE DAILY CUP</span><strong>Something to sip <span>↗</span></strong><small>{drinks.length} recipes · matcha, tea & cocoa</small></a>
               <a href="#toppings"><span>02 / THE FINISHING TOUCH</span><strong>A little extra <span>↗</span></strong><small>{toppings.length} foams, creams & syrups</small></a>
-              <a href="#card"><span>03 / KEEP A COPY</span><strong>For your kitchen <span>↗</span></strong><small>Recipe cards to print & keep</small></a>
+              <a href="#card"><span>03 / KEEP A COPY</span><strong>For your kitchen <span>↗</span></strong><small>A peek at the recipe cards</small></a>
             </nav>
           </> : <div className="about-hero"><div className="about-copy"><span className="section-label">ABOUT.TXT / {themes.find((option) => option.id === theme)?.label.toUpperCase()}</span><h1>{theme === "butter" ? "food log" : "drink log"}<span className="cursor">_</span></h1><p>{theme === "butter" ? "Appetizers, sauces, and food worth making again." : "Cocktails and mocktails for whatever the occasion calls for."}</p><div className="about-ascii" aria-hidden="true">{theme === "butter" ? "[ appetizer ] + [ sauce ] + [ food ]" : "[ cocktail ] + [ mocktail ] = ✦"}</div></div><div className="collection-hero-mark" aria-hidden="true"><span>{theme === "butter" ? "✳" : "✦"}</span><small>{theme === "butter" ? "made to share" : "cheers to that"}</small></div></div>}
         </section>
 
         {theme === "spring" && <><section id="drinks" className="recipe-section drink-list" aria-labelledby="drinks-title">
           <div className="section-heading chapter-heading"><span className="chapter-number" aria-hidden="true">01</span><div><span className="section-label">THE DAILY CUP</span><h2 id="drinks-title">Something to sip.</h2><p>Everyday favorites, with room to experiment.</p></div></div>
-          <div className="chapter-body"><aside className="notebook-margin"><span className="section-label">START HERE ↘</span><h3>The everyday<br />matcha.</h3><p>One glass, a few good ingredients, five quiet minutes.</p><button type="button" onClick={() => openNotebookRecipe(drinks[0])}>Make this one ↗</button><div className="margin-ratio" aria-label="Matcha ratio: 1 part matcha, 10 parts water, 30 parts milk"><strong>1 : 10 : 30</strong><span>matcha · water · milk</span></div></aside><div className="chapter-recipes">
+          <div className="chapter-recipes">
           <div className="list-header"><span>{String(visibleDrinks.length).padStart(2, "0")} RECIPES</span><div className="filters" role="group" aria-label="Filter drinks">{(["All", "Tea", "Cocoa"] as const).map((item) => <button type="button" key={item} onClick={() => { setFilter(item); setSelected(null); }} aria-pressed={filter === item}>{item.toLowerCase()}</button>)}</div></div>
-          {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} isPicked={selectedCardIds.includes(drink.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
-          <p className="list-note">* recipes change when we make something better</p>
-          </div></div>
+          {visibleDrinks.map((drink) => <RecipeEntry key={drink.id} recipe={drink} isOpen={selected?.id === drink.id} onSelect={setSelected} />)}
+          </div>
         </section>
 
         <section id="toppings" className="recipe-section topping-list" aria-labelledby="toppings-title">
-          <div className="section-heading chapter-heading"><span className="chapter-number" aria-hidden="true">02</span><div><span className="section-label">THE FINISHING TOUCH</span><h2 id="toppings-title">A little extra.</h2><p>A soft cloud of cream. A spoonful of something sweet.</p></div></div>
-          <div className="chapter-body"><aside className="notebook-margin"><span className="section-label">A NOTE IN THE MARGIN</span><h3>Mix, match,<br />make it yours.</h3><p>Try lemon syrup in a cold tea or pour it beneath a layer of matcha.</p><button type="button" onClick={() => openNotebookRecipe(toppings[3])}>Start with lemon ↗</button><span className="margin-flower" aria-hidden="true">✳</span></aside><div className="chapter-recipes">
-          <div className="list-header"><span>FOAMS / CREAMS / SYRUPS</span><span>{String(toppings.length).padStart(2, "0")} RECIPES</span></div>
+          <div className="section-heading chapter-heading"><span className="chapter-number" aria-hidden="true">02</span><div><span className="section-label">THE FINISHING TOUCH</span><h2 id="toppings-title">A little extra.</h2><p>Foams, creams, and syrups to make it yours.</p></div></div>
+          <div className="chapter-recipes">
+          <div className="list-header"><span>{String(toppings.length).padStart(2, "0")} RECIPES</span></div>
           <div className="topping-recipes">
-            {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} isPicked={selectedCardIds.includes(topping.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
-          </div></div></div>
+            {toppings.map((topping) => <RecipeEntry key={topping.id} recipe={topping} isOpen={selected?.id === topping.id} onSelect={setSelected} />)}
+          </div></div>
         </section></>}
         {visibleExtraSections.map((section) => <section key={section.id} id={section.id} className="recipe-section" aria-labelledby={`${section.id}-title`}>
           <div className="section-heading"><span className="section-label">{section.title.toUpperCase()}.TXT</span><h2 id={`${section.id}-title`}>{section.title}</h2><p>{section.description}</p></div>
           <div className="list-header"><span>FILE NAME</span><span>{section.recipes.length} {section.recipes.length === 1 ? "FILE" : "FILES"}</span></div>
-          {section.recipes.map((recipe) => <RecipeEntry key={recipe.id} recipe={recipe} isOpen={selected?.id === recipe.id} onSelect={setSelected} isPicked={selectedCardIds.includes(recipe.id)} printIsFull={selectedCardIds.length >= MAX_PRINT_CARDS} onTogglePrint={togglePrintRecipe} />)}
+          {section.recipes.map((recipe) => <RecipeEntry key={recipe.id} recipe={recipe} isOpen={selected?.id === recipe.id} onSelect={setSelected} />)}
         </section>)}
         <section id="card" className="recipe-section home-card" aria-labelledby="card-title">
-          <div className={`section-heading${theme === "spring" ? " chapter-heading" : ""}`}>{theme === "spring" && <span className="chapter-number" aria-hidden="true">03</span>}<div><span className="section-label">{theme === "spring" ? "FROM THE NOTEBOOK TO YOUR KITCHEN" : "CARD.TXT"}</span><h2 id="card-title">A recipe to keep.</h2><p>Print it, punch it, save for later.</p></div></div>
+          <div className={`section-heading${theme === "spring" ? " chapter-heading" : ""}`}>{theme === "spring" && <span className="chapter-number" aria-hidden="true">03</span>}<div><span className="section-label">{theme === "spring" ? "FROM THE NOTEBOOK TO YOUR KITCHEN" : "CARD.TXT"}</span><h2 id="card-title">A recipe to keep.</h2><p>A little preview from the collection.</p></div></div>
           <Card3D theme={theme} recipes={studioCards} featuredIndex={featuredIndex} />
-          <div className="home-card-print">
-            <h3>print the card</h3>
-            <CardSheetDownload theme={theme} selectedIds={selectedCardIds} onDuplicate={duplicatePrintRecipe} onRemove={removePrintRecipe} onClear={() => updateSelectedCards(() => [])} />
-            <div className="card-print-settings">
-              <h4>print settings / PDF</h4>
-              <ul>
-                <li><strong>Paper:</strong> US Letter (8.5 × 11 in), color, up to ten 3.5 × 2 in cards per sheet</li>
-                <li><strong>Size:</strong> Actual Size / 100% — not Fit or Shrink</li>
-                <li><strong>Sides:</strong> Print the front and back PDFs separately, each single-sided</li>
-                <li><strong>Paper type:</strong> Cardstock, heavyweight, or matte, if your printer offers it</li>
-                <li><strong>Feed:</strong> Use a manual or straight paper path if available; feed one cardstock sheet at a time</li>
-              </ul>
-            </div>
-            <p className="home-card-print-note">Individual 5 × 3 in artwork · 1500 × 900 px PNG · blue ink on white · ¼ in punch guide</p>
+          <div className="home-card-preview">
+            <h3>the card, up close</h3>
             <div className="flat-grid">
-              <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Printable 5 by 3 inch recipe front for ${featuredCard.title} with a small dog logo`} /><figcaption><span>FRONT / RECIPE {featuredCard.number}</span><CardPngDownload theme={theme} recipe={featuredCard} side="front" /></figcaption></figure>
-              <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Printable 5 by 3 inch back with the Jelly's Lab dog logo and name" /><figcaption><span>BACK / ORIGINAL MARK</span><CardPngDownload theme={theme} recipe={featuredCard} side="back" /></figcaption></figure>
+              <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Recipe card front for ${featuredCard.title} with a small dog logo`} /><figcaption>FRONT / RECIPE {featuredCard.number}</figcaption></figure>
+              <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Recipe card back with the Jelly's Lab dog logo and name" /><figcaption>BACK / ORIGINAL MARK</figcaption></figure>
             </div>
-            <p className="home-card-print-tip">Test one sheet from each PDF before printing the full set. Adjust the back only if every card is off by the same amount. Cut along the trim marks, then pair each front with a back.</p>
           </div>
         </section>
         <footer><span>© jelly&apos;s lab</span><a href="#top">back to top ↑</a></footer>

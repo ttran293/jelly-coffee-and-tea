@@ -12,7 +12,7 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 .card-3d-canvas { cursor: grab; }
 .card-3d-canvas:active { cursor: grabbing; }
 .card-3d-fallback { object-fit: contain; padding: 9%; }
-.card-3d-actions { position: absolute; bottom: 20px; left: 22px; right: 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--muted-ink); font-size: 11px; pointer-events: none; }
+.card-3d-actions { position: absolute; bottom: 20px; left: 22px; right: 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--muted-ink); font-size: 12px; pointer-events: none; }
 .card-3d-buttons { display: flex; gap: 6px; pointer-events: auto; }
 .card-3d-actions button { pointer-events: auto; background: var(--ink); color: var(--page); border: 0; padding: 11px 15px; font: inherit; cursor: pointer; }
 :is(html[data-theme="peach"], html[data-theme="tidal"]) .card-3d-actions button:first-child { color: var(--contrast-ink); }
@@ -22,7 +22,8 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 .card-3d-actions button + button:hover { background: var(--page); color: var(--accent-ink); }
 .card-3d-actions button:focus-visible, .flat-grid a:focus-visible, .card-sheet-buttons button:focus-visible, .card-sheet-review button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
 
-.home-card-print { margin-top: 20px; border-top: 1px solid var(--line); }
+.home-card-preview { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+.home-card-preview h3 { margin: 0 0 18px; color: var(--accent-ink); font-size: 16px; font-weight: 500; }
 .home-card-print h3 { margin: 0; padding: 17px 0 0; color: var(--accent-ink); font-size: 14px; font-weight: 500; }
 .card-sheet-download { margin: 10px 0 24px; padding: 18px; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 75%, transparent); scroll-margin-top: 20px; }
 .card-sheet-download > p { margin: 0 0 14px; color: var(--muted-ink); font-size: 12px; line-height: 1.5; }
@@ -71,7 +72,7 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 .flat-grid figure { min-width: 0; margin: 0; }
 .flat-grid img { display: block; width: 100%; height: auto; aspect-ratio: 5 / 3; box-shadow: 0 13px 27px color-mix(in srgb, var(--ink) 13%, transparent), 0 3px 7px color-mix(in srgb, var(--ink) 10%, transparent); }
 :is(html[data-theme="cloud"], html[data-theme="blush"], html[data-theme="spring"], html[data-theme="nightfall"], html[data-theme="peach"], html[data-theme="tidal"], html[data-theme="garden"]) .flat-grid img { box-shadow: 0 16px 34px #111b3d66, 0 3px 8px #111b3d44; }
-.flat-grid figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 15px; color: var(--muted-ink); font-size: 11px; letter-spacing: .07em; }
+.flat-grid figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 15px; color: var(--muted-ink); font-size: 12px; letter-spacing: .07em; }
 .flat-grid a { color: var(--accent-ink); letter-spacing: 0; font-size: 12px; }
 .flat-grid a[href]:hover { text-decoration: underline; text-underline-offset: 4px; }
 .flat-grid a[aria-disabled="true"] { color: var(--muted-ink); cursor: wait; }
