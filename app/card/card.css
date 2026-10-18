@@ -23,7 +23,6 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
 .card-3d-actions button:focus-visible, .flat-grid a:focus-visible, .card-sheet-buttons button:focus-visible, .card-sheet-review button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
 
 .home-card-preview { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
-.home-card-preview h3 { margin: 0 0 18px; color: var(--accent-ink); font-size: 16px; font-weight: 500; }
 .home-card-print h3 { margin: 0; padding: 17px 0 0; color: var(--accent-ink); font-size: 14px; font-weight: 500; }
 .card-sheet-download { margin: 10px 0 24px; padding: 18px; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 75%, transparent); scroll-margin-top: 20px; }
 .card-sheet-download > p { margin: 0 0 14px; color: var(--muted-ink); font-size: 12px; line-height: 1.5; }

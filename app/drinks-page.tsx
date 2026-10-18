@@ -392,19 +392,12 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
       </aside>
 
       <main className={`main-content${theme === "spring" ? " illustrated-notebook" : ""}`}>
-        <div className="notebook-running-head"><span>JELLY’S LAB / A RECIPE NOTEBOOK</span><span>{theme === "spring" ? "VOL. 01 — COFFEE & TEA" : theme === "butter" ? "VOL. 02 — FOOD" : "VOL. 03 — DRINKS"}</span></div>
         <section id="about" className="about about-first" aria-label="About this collection">
           {theme === "spring" ? <>
             <div className="notebook-intro">
               <div><span className="section-label">FOR SLOW MORNINGS & LITTLE BREAKS</span><h1>coffee and tea</h1></div>
-              <div className="notebook-intro-note"><span aria-hidden="true">✳</span><p>A collection of things we make, taste, and make again. A little less perfect. A little more homemade.</p></div>
             </div>
             <MatchaGarden />
-            <nav className="notebook-contents" aria-label="Inside this notebook">
-              <a href="#drinks"><span>01 / THE DAILY CUP</span><strong>Something to sip <span>↗</span></strong><small>{drinks.length} recipes · matcha, tea & cocoa</small></a>
-              <a href="#toppings"><span>02 / THE FINISHING TOUCH</span><strong>A little extra <span>↗</span></strong><small>{toppings.length} foams, creams & syrups</small></a>
-              <a href="#card"><span>03 / KEEP A COPY</span><strong>For your kitchen <span>↗</span></strong><small>A peek at the recipe cards</small></a>
-            </nav>
           </> : <div className="about-hero"><div className="about-copy"><span className="section-label">ABOUT.TXT / {themes.find((option) => option.id === theme)?.label.toUpperCase()}</span><h1>{theme === "butter" ? "food log" : "drink log"}<span className="cursor">_</span></h1><p>{theme === "butter" ? "Appetizers, sauces, and food worth making again." : "Cocktails and mocktails for whatever the occasion calls for."}</p><div className="about-ascii" aria-hidden="true">{theme === "butter" ? "[ appetizer ] + [ sauce ] + [ food ]" : "[ cocktail ] + [ mocktail ] = ✦"}</div></div><div className="collection-hero-mark" aria-hidden="true"><span>{theme === "butter" ? "✳" : "✦"}</span><small>{theme === "butter" ? "made to share" : "cheers to that"}</small></div></div>}
         </section>
 
@@ -433,7 +426,6 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
           <div className={`section-heading${theme === "spring" ? " chapter-heading" : ""}`}>{theme === "spring" && <span className="chapter-number" aria-hidden="true">03</span>}<div><span className="section-label">{theme === "spring" ? "FROM THE NOTEBOOK TO YOUR KITCHEN" : "CARD.TXT"}</span><h2 id="card-title">A recipe to keep.</h2><p>A little preview from the collection.</p></div></div>
           <Card3D theme={theme} recipes={studioCards} featuredIndex={featuredIndex} />
           <div className="home-card-preview">
-            <h3>the card, up close</h3>
             <div className="flat-grid">
               <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Recipe card front for ${featuredCard.title} with a small dog logo`} /><figcaption>FRONT / RECIPE {featuredCard.number}</figcaption></figure>
               <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Recipe card back with the Jelly's Lab dog logo and name" /><figcaption>BACK / ORIGINAL MARK</figcaption></figure>
