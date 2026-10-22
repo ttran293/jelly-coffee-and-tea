@@ -24,6 +24,12 @@ export function cardPalette() {
 }
 
 const xml = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+// Keep matching roles identical on both sides, including rasterized downloads.
+const cardType = {
+  title: 'font-family="Arial, Helvetica, sans-serif" font-size="57" font-weight="700" letter-spacing="-2"',
+  label: 'font-family="Courier New, monospace" font-size="24" font-weight="600" letter-spacing="4"',
+  caption: 'font-family="Courier New, monospace" font-size="22" font-weight="600"',
+} as const;
 
 export function cardSvg(_theme: ThemeName, recipe: CardRecipe, side: CardSide, texture = false, sheet = false) {
   const color = cardPalette();
@@ -41,12 +47,28 @@ export function cardSvg(_theme: ThemeName, recipe: CardRecipe, side: CardSide, t
   <ellipse cx="${insetX}" cy="${insetY}" rx="${holeRadiusX}" ry="${holeRadiusY}" fill="#fff" stroke="${color.accent}" stroke-width="1.5"/>` : ""}`;
 
   if (side === "back") {
+    // Twelve blank spaces for physical stamps; keep the mirrored binding-hole
+    // area at the upper right clear in both the texture and print artwork.
+    const scallop = Array.from({ length: 192 }, (_, index) => {
+      const angle = index * Math.PI * 2 / 192;
+      const radius = 54 + 3 * Math.cos(angle * 16);
+      return `${index === 0 ? "M" : "L"}${(Math.cos(angle) * radius).toFixed(2)} ${(Math.sin(angle) * radius).toFixed(2)}`;
+    }).join(" ") + " Z";
+    const stamps = Array.from({ length: 12 }, (_, index) => {
+      const x = 150 + (index % 6) * 150;
+      const y = 300 + Math.floor(index / 6) * 150;
+      return `<path d="${scallop}" transform="translate(${x} ${y})" fill="${color.paper}" stroke="${index === 11 ? color.accent : color.line}" stroke-width="${index === 11 ? 3 : 2}"/>
+  <text x="${x}" y="${y + 7}" text-anchor="middle" fill="${color.muted}" ${cardType.caption}>${String(index + 1).padStart(2, "0")}</text>`;
+    }).join("\n  ");
     return `${start}
-  <g transform="rotate(-4 340 230)">
-    <text x="81" y="263" fill="${color.accent}" font-family="Segoe UI Symbol, IBM Plex Mono, monospace" font-size="205" font-weight="500" letter-spacing="-24">U・ᴥ・U</text>
-    <text x="307" y="345" text-anchor="middle" fill="${color.muted}" font-family="IBM Plex Mono, Courier New, monospace" font-size="37" letter-spacing="2">~ woof ~</text>
-  </g>
-  <text x="80" y="464" fill="${color.ink}" font-family="IBM Plex Mono, Courier New, monospace" font-size="63" letter-spacing="-2">jelly's lab</text>
+  <rect x="18" y="18" width="1014" height="594" rx="12" fill="none" stroke="${color.line}" stroke-width="2"/>
+  <text x="72" y="72" fill="${smallInk}" ${cardType.label}>A LITTLE CUP CLUB</text>
+  <text x="69" y="170" fill="${color.ink}" ${cardType.title}>jelly's lab</text>
+  <text x="770" y="104" transform="rotate(-4 882 85)" fill="${color.accent}" font-family="Segoe UI Symbol, IBM Plex Mono, monospace" font-size="72" font-weight="500" letter-spacing="-8">U・ᴥ・U</text>
+  <path d="M70 197h910" stroke="${color.line}" stroke-width="2"/>
+  ${stamps}
+  <text x="72" y="570" fill="${smallInk}" ${cardType.caption}>GOOD SIPS, LITTLE RITUALS.</text>
+  <text x="978" y="570" text-anchor="end" fill="${smallInk}" ${cardType.caption}>~ woof ~</text>
 </svg>`;
   }
 
@@ -58,9 +80,9 @@ export function cardSvg(_theme: ThemeName, recipe: CardRecipe, side: CardSide, t
   }).join("\n    ");
 
   return `${start}
-  <text x="${headerX}" y="72" fill="${smallInk}" font-family="Courier New, monospace" font-size="24" font-weight="600" letter-spacing="4">RECIPE CARD / ${recipe.number}</text>
+  <text x="${headerX}" y="72" fill="${smallInk}" ${cardType.label}>RECIPE CARD / ${recipe.number}</text>
   <text x="770" y="104" transform="rotate(-4 882 85)" fill="${color.accent}" font-family="Segoe UI Symbol, IBM Plex Mono, monospace" font-size="72" font-weight="500" letter-spacing="-8">U・ᴥ・U</text>
-  <text x="69" y="${170 + contentShift}" fill="${color.ink}" font-family="Arial, Helvetica, sans-serif" font-size="57" font-weight="700" letter-spacing="-2">${xml(recipe.title)}</text>
+  <text x="69" y="${170 + contentShift}" fill="${color.ink}" ${cardType.title}>${xml(recipe.title)}</text>
   <text x="777" y="${171 + contentShift}" fill="${smallInk}" font-family="Courier New, monospace" font-size="22" font-weight="600">${xml(recipe.meta)}</text>
   <path d="M70 ${197 + contentShift}h910" stroke="${color.line}" stroke-width="2"/>
   <path d="M500 ${226 + contentShift}v298" stroke="${color.line}" stroke-width="2" stroke-dasharray="5 8"/>
@@ -74,7 +96,7 @@ export function cardSvg(_theme: ThemeName, recipe: CardRecipe, side: CardSide, t
   <g font-family="Arial, Helvetica, sans-serif" font-size="26" fill="${color.ink}">
     ${steps}
   </g>
-  <text x="72" y="570" fill="${smallInk}" font-family="Courier New, monospace" font-size="22" font-weight="600">LAB NOTE: ${xml(recipe.note)}</text>
+  <text x="72" y="570" fill="${smallInk}" ${cardType.caption}>LAB NOTE: ${xml(recipe.note)}</text>
 </svg>`;
 }
 

@@ -206,11 +206,12 @@ h1 { font: 400 clamp(64px, 7.2vw, 102px)/.85 "Handjet", monospace; letter-spacin
 .illustrated-notebook .matcha-garden { margin: 0 -24px; }
 .illustrated-notebook .matcha-garden__caption { padding: 0 24px 22px; }
 .illustrated-notebook .recipe-section { margin-top: 76px; padding-top: 24px; }
-.chapter-heading { display: grid; grid-template-columns: 162px minmax(0, 1fr); gap: 32px; align-items: start; }
-.chapter-number { font: 400 76px/.9 "Handjet", monospace; color: color-mix(in srgb, var(--pop) 55%, transparent); }
-.chapter-heading .section-label { font-size: 12px; letter-spacing: .07em; }
-.chapter-heading h2 { font-size: clamp(48px, 5vw, 66px); margin: 10px 0; }
-.chapter-heading p { font-size: 15px; line-height: 1.55; margin-bottom: 30px; }
+.chapter-heading { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 24px; align-items: start; margin-bottom: 24px; }
+.chapter-heading > div { min-width: 0; }
+.chapter-number { padding-top: 27px; font: 400 48px/1.1 "Handjet", monospace; color: var(--muted-ink); font-variant-numeric: tabular-nums; }
+.chapter-heading .section-label { display: block; font-size: 11px; font-weight: 500; line-height: 1.5; letter-spacing: .07em; }
+.chapter-heading h2 { font-size: clamp(40px, 4vw, 52px); line-height: 1.1; margin: 8px 0 10px; text-wrap: balance; }
+.chapter-heading p { font-size: 14px; line-height: 1.6; margin: 0; max-width: 56ch; }
 .chapter-body { display: grid; grid-template-columns: 162px minmax(0, 1fr); gap: 32px; }
 .chapter-recipes { min-width: 0; }
 .notebook-margin { padding: 20px 18px 0 0; border-top: 1px solid var(--line); }
@@ -231,7 +232,7 @@ h1 { font: 400 clamp(64px, 7.2vw, 102px)/.85 "Handjet", monospace; letter-spacin
 .illustrated-notebook .drink-info strong { font-size: clamp(17px, 1.6vw, 19px); line-height: 1.35; }
 .illustrated-notebook .drink-info small { font-size: 14px; line-height: 1.5; }
 .illustrated-notebook .drink-kind { display: none; }
-.chapter-recipes > .list-header { padding: 0 0 10px 194px; min-height: 44px; }
+.chapter-recipes > .list-header { padding: 0 0 10px 88px; min-height: 44px; }
 .illustrated-notebook .list-note { font-size: 10px; }
 .drink-row { scroll-margin-top: 24px; }
 .topping-recipes .drink-kind { display: none; }
@@ -351,8 +352,7 @@ footer a:hover { color: var(--accent-ink); }
   .site-shell { padding-inline: 30px; grid-template-columns: 184px minmax(0, 1fr); column-gap: 32px; }
   .sidebar { padding-right: 24px; }
   .dog-kaomoji span { font-size: 38px; }
-  .chapter-heading, .chapter-body { grid-template-columns: 125px minmax(0, 1fr); gap: 22px; }
-  .chapter-recipes > .list-header { padding-left: 147px; }
+  .chapter-body { grid-template-columns: 125px minmax(0, 1fr); gap: 22px; }
   .illustrated-notebook .drink-kind { display: none; }
   .illustrated-notebook .row-arrow { margin-left: auto; }
 }
@@ -377,10 +377,10 @@ footer a:hover { color: var(--accent-ink); }
   .notebook-intro h1 { font-size: clamp(72px, 12.5vw, 96px); }
   .illustrated-notebook .matcha-garden { margin: 12px -14px 0; }
   .illustrated-notebook .matcha-garden__caption { padding-inline: 14px; }
-  .chapter-heading { grid-template-columns: 56px minmax(0, 1fr); gap: 18px; }
-  .chapter-heading h2 { font-size: clamp(46px, 7.4vw, 56px); }
-  .chapter-recipes > .list-header { padding-left: 74px; }
-  .chapter-number { font-size: 56px; }
+  .chapter-heading { grid-template-columns: 44px minmax(0, 1fr); gap: 16px; }
+  .chapter-heading h2 { font-size: clamp(36px, 6vw, 44px); }
+  .chapter-recipes > .list-header { padding-left: 60px; }
+  .chapter-number { font-size: 40px; }
   .chapter-body { grid-template-columns: 1fr; gap: 24px; }
   .notebook-margin { padding: 16px 20px; border: 1px dashed var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
   .notebook-margin h3 { margin: 0; grid-column: 1; grid-row: 2 / 4; font-size: 32px; }
@@ -393,7 +393,7 @@ footer a:hover { color: var(--accent-ink); }
 @media (max-width: 480px) {
   .notebook-intro h1 { font-size: clamp(64px, 16.5vw, 78px); }
   .notebook-intro .section-label { font-size: 11px; }
-  .chapter-heading h2 { font-size: clamp(44px, 10vw, 48px); }
+  .chapter-heading h2 { font-size: clamp(34px, 8.5vw, 40px); }
   .chapter-heading p { font-size: 14px; }
   .chapter-recipes > .list-header { flex-wrap: wrap; row-gap: 0; }
   .notebook-margin { padding: 14px; gap: 8px 14px; }

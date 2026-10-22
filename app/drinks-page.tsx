@@ -428,7 +428,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
           <div className="home-card-preview">
             <div className="flat-grid">
               <figure><Image src={cardDataUrl(theme, featuredCard, "front")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt={`Recipe card front for ${featuredCard.title} with a small dog logo`} /><figcaption>FRONT / RECIPE {featuredCard.number}</figcaption></figure>
-              <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Recipe card back with the Jelly's Lab dog logo and name" /><figcaption>BACK / ORIGINAL MARK</figcaption></figure>
+              <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Jelly's Lab stamp card with a dog mark and twelve numbered scalloped spaces in blue ink on white paper" /><figcaption>BACK / STAMP CARD</figcaption></figure>
             </div>
           </div>
         </section>
