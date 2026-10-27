@@ -82,3 +82,11 @@ html[data-theme="garden"] .card-3d-wrap { background: radial-gradient(ellipse at
   .card-3d-actions { bottom: 14px; left: 14px; right: 14px; }
   .card-3d-actions > span { display: none; }
 }
+.recipe-pdf-download { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin-top: 24px; padding: 24px; border: 1px solid var(--line); background: var(--panel); }
+.recipe-pdf-download > div { flex: 1 1 300px; }
+.recipe-pdf-download h3 { margin: 0 0 8px; font-size: 17px; font-weight: 500; }
+.recipe-pdf-download p { margin: 0; color: var(--soft-ink); font-size: 13px; line-height: 1.6; }
+.recipe-pdf-download a { display: inline-block; padding: 13px 16px; background: var(--accent-ink); color: var(--page); font-size: 13px; text-decoration: none; }
+.recipe-pdf-download a:hover { background: var(--ink); }
+.recipe-pdf-download a:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 4px; }
+.recipe-pdf-download small { flex-basis: 100%; color: var(--muted-ink); font-size: 11px; }

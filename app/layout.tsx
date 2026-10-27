@@ -5,8 +5,8 @@ import "./globals.css";
 import "./card/card.css";
 
 export const metadata: Metadata = {
-  title: "Jelly's Lab | Coffee/Tea, Food & Drinks",
-  description: "Recipes for coffee, tea, appetizers, sauces, food, cocktails, and mocktails.",
+  title: "Jelly's Lab | Coffee & Tea Recipes",
+  description: "Coffee and tea recipes, with foams, creams, and syrups to make them yours.",
   icons: { icon: "/favicon.svg?v=3", shortcut: "/favicon.svg?v=3" },
 };
 

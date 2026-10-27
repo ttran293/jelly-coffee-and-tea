@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { THEME_COOKIE, type CollectionTheme, type ThemeName } from "./theme";
+import { AVAILABLE_COLLECTIONS, THEME_COOKIE, type CollectionTheme } from "./theme";
 import { Card3D } from "./card/studio";
 import { MatchaGarden } from "./matcha-garden";
 import { CARD_SIZE, cardDataUrl } from "./card/artwork";
@@ -306,6 +306,17 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
   const recipeCount = theme === "spring" ? drinks.length + toppings.length : theme === "butter" ? appetizers.length + sauces.length + food.length : cocktails.length + mocktails.length;
 
   useEffect(() => {
+    // Replace retired collection preferences and links after the server has
+    // selected the supported collection for both the page and its colors.
+    saveThemeCookie(initialTheme);
+    const section = window.location.hash.slice(1);
+    if (["appetizers", "sauces", "food", "cocktails", "mocktails"].includes(section)) {
+      window.history.replaceState(null, "", `${location.pathname}${location.search}#drinks`);
+      document.getElementById("drinks")?.scrollIntoView();
+    }
+  }, [initialTheme]);
+
+  useEffect(() => {
     const updateSection = () => {
       const readingLine = Math.min(window.innerHeight * 0.35, 280);
       let visibleSection: SectionId = "about";
@@ -382,7 +393,7 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
         <nav className="sidebar-nav" aria-label="Main navigation">{visibleSectionIds.map((id) => <a key={id} href={`#${id}`} className={activeSection === id ? "current" : undefined} aria-current={activeSection === id ? "location" : undefined}>{activeSection === id ? "> " : ""}{id === "drinks" ? "coffee/tea" : id}</a>)}</nav>
         <div className="theme-picker">
           <div className="sidebar-label">COLLECTION / <span>{themes.find((option) => option.id === theme)?.label}</span></div>
-          <div className="theme-options" role="group" aria-label="Recipe collection">{themes.map((option) => <button key={option.id} type="button" hidden={option.id !== "spring"} className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.name}, ${option.label} theme`} aria-pressed={theme === option.id} title={`${option.name} · ${option.label}`}>
+          <div className="theme-options" role="group" aria-label="Recipe collection">{themes.filter((option) => AVAILABLE_COLLECTIONS.includes(option.id)).map((option) => <button key={option.id} type="button" className={theme === option.id ? "theme-option active" : "theme-option"} onClick={() => chooseTheme(option.id)} aria-label={`${option.name}, ${option.label} theme`} aria-pressed={theme === option.id} title={`${option.name} · ${option.label}`}>
             <span className="theme-swatch" style={{ background: option.id === "spring" ? `linear-gradient(90deg, ${option.colors[0]} 0%, ${option.colors[2]} 50%, ${option.colors[3]} 100%)` : option.colors[0], color: option.colors[1], borderColor: option.colors[1] }}><i style={{ background: option.colors[2] }} /><i style={{ background: option.colors[3] }} /></span><span className="theme-name">{option.name}<small>{option.label}</small></span>
           </button>)}</div>
         </div>
@@ -431,6 +442,11 @@ export default function DrinksPage({ initialTheme }: { initialTheme: CollectionT
               <figure><Image src={cardDataUrl(theme, featuredCard, "back")} width={CARD_SIZE.width} height={CARD_SIZE.height} unoptimized alt="Jelly's Lab stamp card with a dog mark and twelve numbered scalloped spaces in blue ink on white paper" /><figcaption>BACK / STAMP CARD</figcaption></figure>
             </div>
           </div>
+          {theme === "spring" && <div className="recipe-pdf-download">
+            <div><h3>Ten cards. One sheet.</h3><p>Five drink recipes, two copies each. Page one has two columns of five recipe cards; page two has ten matching Jelly&apos;s Lab backs.</p></div>
+            <a href="/downloads/jellys-lab-coffee-tea-recipes.pdf" download>Download recipe PDF ↓</a>
+            <small>US Letter · 100% / Actual size · Double-sided, flip on long edge · Cut into ten 3.5 × 2.1 inch cards, matching the preview proportions.</small>
+          </div>}
         </section>
         <footer><span>© jelly&apos;s lab</span><a href="#top">back to top ↑</a></footer>
       </main>

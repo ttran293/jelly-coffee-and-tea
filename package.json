@@ -6,6 +6,7 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "generate:recipe-pdf": "node scripts/generate-recipe-pdf.mjs",
     "dev": "next dev --port 5173",
     "build": "next build",
     "start": "next start --port 5173",

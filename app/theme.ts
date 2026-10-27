@@ -4,11 +4,12 @@ const themeNames = ["butter", "blueberry", "cherry", "lilac", "cloud", "blush", 
 
 export type ThemeName = typeof themeNames[number];
 export type CollectionTheme = "spring" | "butter" | "blueberry";
+export const AVAILABLE_COLLECTIONS: readonly CollectionTheme[] = ["spring"];
 
 export function readTheme(value: string | undefined): ThemeName {
   return themeNames.find((theme) => theme === value) ?? "spring";
 }
 
 export function readCollectionTheme(value: string | undefined): CollectionTheme {
-  return value === "butter" || value === "blueberry" ? value : "spring";
+  return AVAILABLE_COLLECTIONS.find((collection) => collection === value) ?? "spring";
 }
